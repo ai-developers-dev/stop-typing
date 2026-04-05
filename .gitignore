@@ -1,1 +1,4 @@
 .DS_Store
+
+# Local Xcode/arch overrides (not referenced by the project)
+wispr/xcconfig-override.xcconfig
