@@ -135,7 +135,7 @@ struct MenuBarControllerMenuTests {
         // 4: Settings…
         // 5: Model Management…
         // 6: Separator
-        // 7: Quit Wispr
+        // 7: Quit Stop Typing
         // Total: 8 items (5 actionable + 3 separators)
         // Verified by successful init — menu is built in buildMenu().
         controller.stopObserving()
@@ -220,10 +220,10 @@ struct MenuBarControllerAccessibilityTests {
         let symbol = themeEngine.menuBarSymbol(for: .idle)
         let image = NSImage(
             systemSymbolName: symbol,
-            accessibilityDescription: "Wispr Voice Dictation"
+            accessibilityDescription: "Stop Typing — Voice Dictation"
         )
         #expect(image != nil, "SF Symbol image should be created for idle state")
-        #expect(image?.accessibilityDescription == "Wispr Voice Dictation")
+        #expect(image?.accessibilityDescription == "Stop Typing — Voice Dictation")
     }
 
     @Test("Status item icon has accessibility description for recording state")
@@ -232,10 +232,10 @@ struct MenuBarControllerAccessibilityTests {
         let symbol = themeEngine.menuBarSymbol(for: .recording)
         let image = NSImage(
             systemSymbolName: symbol,
-            accessibilityDescription: "Wispr — Recording"
+            accessibilityDescription: "Stop Typing — Recording"
         )
         #expect(image != nil, "SF Symbol image should be created for recording state")
-        #expect(image?.accessibilityDescription == "Wispr — Recording")
+        #expect(image?.accessibilityDescription == "Stop Typing — Recording")
     }
 
     @Test("Status item icon has accessibility description for processing state")
@@ -244,10 +244,10 @@ struct MenuBarControllerAccessibilityTests {
         let symbol = themeEngine.menuBarSymbol(for: .processing)
         let image = NSImage(
             systemSymbolName: symbol,
-            accessibilityDescription: "Wispr — Processing"
+            accessibilityDescription: "Stop Typing — Processing"
         )
         #expect(image != nil, "SF Symbol image should be created for processing state")
-        #expect(image?.accessibilityDescription == "Wispr — Processing")
+        #expect(image?.accessibilityDescription == "Stop Typing — Processing")
     }
 
     @Test("Status item icon has accessibility description for error state")
@@ -256,10 +256,10 @@ struct MenuBarControllerAccessibilityTests {
         let symbol = themeEngine.menuBarSymbol(for: .error("Test error"))
         let image = NSImage(
             systemSymbolName: symbol,
-            accessibilityDescription: "Wispr — Error"
+            accessibilityDescription: "Stop Typing — Error"
         )
         #expect(image != nil, "SF Symbol image should be created for error state")
-        #expect(image?.accessibilityDescription == "Wispr — Error")
+        #expect(image?.accessibilityDescription == "Stop Typing — Error")
     }
 
     @Test("All SF Symbol names used in menu items resolve to valid images")
@@ -284,9 +284,39 @@ struct MenuBarControllerAccessibilityTests {
         let symbol = themeEngine.menuBarSymbol(for: .idle)
         let image = NSImage(
             systemSymbolName: symbol,
-            accessibilityDescription: "Wispr Voice Dictation"
+            accessibilityDescription: "Stop Typing — Voice Dictation"
         )
         image?.isTemplate = true
         #expect(image?.isTemplate == true, "Menu bar icon should be a template image")
+    }
+}
+
+// MARK: - Stop Typing menu bar lettermark
+
+@MainActor
+@Suite("StopTypingMenuBarMark Tests")
+struct StopTypingMenuBarMarkTests {
+
+    @Test("Colored lettermark is non-template and point-sized")
+    func testColoredMarkDimensions() {
+        let img = StopTypingMenuBarMark.image(
+            for: .idle,
+            template: false,
+            accessibilityDescription: "Stop Typing"
+        )
+        #expect(img.size.width == 18)
+        #expect(img.size.height == 18)
+        #expect(img.isTemplate == false)
+        #expect(img.accessibilityDescription == "Stop Typing")
+    }
+
+    @Test("Contrast template lettermark is marked template")
+    func testTemplateMark() {
+        let img = StopTypingMenuBarMark.image(
+            for: .recording,
+            template: true,
+            accessibilityDescription: nil
+        )
+        #expect(img.isTemplate == true)
     }
 }

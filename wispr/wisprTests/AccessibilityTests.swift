@@ -95,15 +95,15 @@ struct AccessibilityLabelGenerationTests {
     private func menuBarIconDescription(for state: AppStateType) -> String {
         switch state {
         case .loading:
-            "Wispr — Loading"
+            "Stop Typing — Loading"
         case .idle:
-            "Wispr — Idle"
+            "Stop Typing — Idle"
         case .recording:
-            "Wispr — Recording"
+            "Stop Typing — Recording"
         case .processing:
-            "Wispr — Processing"
+            "Stop Typing — Processing"
         case .error:
-            "Wispr — Error"
+            "Stop Typing — Error"
         }
     }
 
@@ -116,12 +116,12 @@ struct AccessibilityLabelGenerationTests {
                 "Each state should have a unique accessibility description")
     }
 
-    @Test("Menu bar icon descriptions all contain 'Wispr'")
+    @Test("Menu bar icon descriptions all contain 'Stop Typing'")
     func testMenuBarIconDescriptionsContainAppName() {
         let states: [AppStateType] = [.idle, .recording, .processing, .error("test")]
         for state in states {
             let desc = menuBarIconDescription(for: state)
-            #expect(desc.contains("Wispr"), "Description for \(state) should contain app name")
+            #expect(desc.contains("Stop Typing"), "Description for \(state) should contain app name")
         }
     }
 

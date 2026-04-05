@@ -2,7 +2,7 @@
 //  MenuBarController.swift
 //  wispr
 //
-//  Manages the NSStatusItem menu bar presence, template icon, and dropdown menu.
+//  Manages the NSStatusItem menu bar presence, ST lettermark icon, and dropdown menu.
 //  Bridges to SwiftUI views for settings, model management, and language selection.
 //  Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 14.2, 14.9, 16.7, 16.8
 //
@@ -14,8 +14,8 @@ import os
 
 /// Manages the NSStatusItem in the macOS menu bar.
 ///
-/// Creates the status item on init, sets a template SF Symbol icon that reflects
-/// the current application state, and builds a dropdown menu with recording,
+/// Creates the status item on init, sets a custom “ST” menu bar mark (brand-colored or template)
+/// that reflects the current application state, and builds a dropdown menu with recording,
 /// settings, model management, language selection, and quit actions.
 ///
 /// ## Why AppKit? (Modernization blocker)
@@ -26,7 +26,7 @@ import os
 ///
 /// **Validates Requirements**: 5.1 (NSStatusItem creation), 5.2 (icon state),
 /// 5.3 (dropdown menu), 5.4 (start/stop recording), 5.5 (quit with cleanup),
-/// 14.2 (template icon), 14.9 (smooth icon transitions), 16.7 (language display),
+/// 14.2 (menu bar icon), 14.9 (smooth icon transitions), 16.7 (language display),
 /// 16.8 (language selection in menu)
 @MainActor
 final class MenuBarController {
@@ -136,23 +136,33 @@ final class MenuBarController {
 
     // MARK: - Status Button Configuration
 
-    /// Configures the status item button with the initial template icon.
+    /// Configures the status item button with the initial icon (brand palette or template).
     ///
-    /// Requirement 14.2: Template image that appears sharp at all Retina resolutions.
-    /// NSImage(systemSymbolName:) provides @1x, @2x, @3x automatically.
+    /// Requirement 14.2: Image appears sharp at all Retina resolutions.
+    /// Custom lettermark is drawn at each backing scale via `StopTypingMenuBarMark`.
     private func configureStatusButton() {
         guard let button = statusItem.button else { return }
 
-        let symbolName = themeEngine.menuBarSymbol(for: .idle)
-        let image = NSImage(
-            systemSymbolName: symbolName,
-            accessibilityDescription: "Wispr Voice Dictation"
+        let image = makeStatusItemImage(
+            appState: .idle,
+            accessibilityDescription: "Stop Typing — Voice Dictation"
         )
-        image?.isTemplate = true
         button.image = image
-        button.toolTip = "Wispr — Voice Dictation"
+        button.toolTip = "Stop Typing — Voice Dictation"
 
         statusItem.menu = menu
+    }
+
+    /// Builds the menu bar status image: programmatic "ST" mark (Stitch colors), or template when Increase Contrast is on.
+    private func makeStatusItemImage(
+        appState: AppStateType,
+        accessibilityDescription: String
+    ) -> NSImage {
+        StopTypingMenuBarMark.image(
+            for: appState,
+            template: themeEngine.increaseContrast,
+            accessibilityDescription: accessibilityDescription
+        )
     }
 
     // MARK: - Menu Construction
@@ -240,7 +250,7 @@ final class MenuBarController {
 
         // Quit
         let quitItem = NSMenuItem(
-            title: "Quit Wispr",
+            title: "Quit Stop Typing",
             action: #selector(MenuBarActionHandler.quitApp(_:)),
             keyEquivalent: "q"
         )
@@ -390,26 +400,21 @@ final class MenuBarController {
     private func updateIcon(for state: AppStateType) {
         guard let button = statusItem.button else { return }
 
-        let symbolName = themeEngine.menuBarSymbol(for: state)
         let description: String
         switch state {
         case .loading:
-            description = "Wispr — Loading"
+            description = "Stop Typing — Loading"
         case .idle:
-            description = "Wispr — Idle"
+            description = "Stop Typing — Idle"
         case .recording:
-            description = "Wispr — Recording"
+            description = "Stop Typing — Recording"
         case .processing:
-            description = "Wispr — Processing"
+            description = "Stop Typing — Processing"
         case .error:
-            description = "Wispr — Error"
+            description = "Stop Typing — Error"
         }
 
-        let image = NSImage(
-            systemSymbolName: symbolName,
-            accessibilityDescription: description
-        )
-        image?.isTemplate = true
+        let image = makeStatusItemImage(appState: state, accessibilityDescription: description)
         button.image = image
         button.toolTip = description
 
@@ -534,7 +539,7 @@ final class MenuBarController {
 
         let hostingController = NSHostingController(rootView: settingsView)
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "Wispr Settings"
+        window.title = "Stop Typing Settings"
         window.styleMask = [.titled, .closable, .miniaturizable]
         window.setContentSize(NSSize(width: 560, height: 580))
         window.center()
