@@ -2,7 +2,7 @@
 //  MenuBarController.swift
 //  wispr
 //
-//  Manages the NSStatusItem menu bar presence, ST lettermark icon, and dropdown menu.
+//  Manages the NSStatusItem menu bar presence, ST lettermark icon, and popover panel.
 //  Bridges to SwiftUI views for settings, model management, and language selection.
 //  Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 14.2, 14.9, 16.7, 16.8
 //
@@ -14,13 +14,14 @@ import os
 
 /// Manages the NSStatusItem in the macOS menu bar.
 ///
-/// Creates the status item on init, sets a custom “ST” menu bar mark (brand-colored or template)
-/// that reflects the current application state, and builds a dropdown menu with recording,
-/// settings, model management, language selection, and quit actions.
+/// Creates the status item on init, sets a custom "ST" menu bar mark (brand-colored or template)
+/// that reflects the current application state, and shows an NSPopover with a SwiftUI
+/// `StopTypingPopoverView` for recording, settings, model management, language selection,
+/// and quit actions.
 ///
 /// ## Why AppKit? (Modernization blocker)
 /// SwiftUI's `MenuBarExtra` doesn't support dynamic icon changes, submenus, or
-/// target-action wiring needed here. `NSStatusItem` / `NSMenu` remain the only
+/// target-action wiring needed here. `NSStatusItem` / `NSPopover` remain the only
 /// viable API for a fully custom menu bar presence. Unblocked if Apple extends
 /// `MenuBarExtra` with dynamic image binding and nested menu support.
 ///
@@ -36,11 +37,11 @@ final class MenuBarController {
     /// The macOS menu bar status item.
     private let statusItem: NSStatusItem
 
-    /// The dropdown menu displayed when the user clicks the status item.
-    private let menu: NSMenu
+    /// The popover panel shown when the user clicks the status item.
+    private let popover: NSPopover
 
-    /// Exposed for unit tests (`wisprTests`).
-    var menuForTesting: NSMenu { menu }
+    /// Exposed for unit tests.
+    var popoverForTesting: NSPopover { popover }
 
     /// Reference to the central state manager for wiring actions.
     private let stateManager: StateManager
@@ -84,25 +85,12 @@ final class MenuBarController {
     /// Retained reference to the CLI install window.
     private var cliInstallWindow: NSWindow?
 
-    /// Menu delegate that refreshes dynamic items when the menu opens.
-    private lazy var menuDelegate = MenuOpenDelegate(controller: self)
-
-    // MARK: - Menu Items (retained for dynamic updates)
-
-    private let recordingMenuItem = NSMenuItem()
-    private let languageMenuItem = NSMenuItem()
-    private let languageSubmenu = NSMenu()
-    private let updateMenuItem = NSMenuItem()
-    private let updateSeparator = NSMenuItem.separator()
-    private let cliInstallSeparator = NSMenuItem.separator()
-    private var cliInstallMenuItem: NSMenuItem?
-    private var settingsMenuItemRef: NSMenuItem?
-    private var modelMenuItemRef: NSMenuItem?
-    private var quitMenuItemRef: NSMenuItem?
+    /// Event monitor for closing the popover on outside clicks.
+    private var eventMonitor: Any?
 
     // MARK: - Initialization
 
-    /// Creates the MenuBarController and sets up the status item, icon, and menu.
+    /// Creates the MenuBarController and sets up the status item, icon, and popover.
     ///
     /// - Parameters:
     ///   - stateManager: The central state coordinator.
@@ -132,18 +120,16 @@ final class MenuBarController {
 
         // Requirement 5.1: Create NSStatusItem in the menu bar
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        self.menu = NSMenu()
+        self.popover = NSPopover()
 
         configureStatusButton()
-        buildMenu()
-        menu.delegate = menuDelegate
-        refreshMenuBranding()
+        configurePopover()
         startObservingState()
     }
 
     // MARK: - Status Button Configuration
 
-    /// Configures the status item button with the initial icon (brand palette or template).
+    /// Configures the status item button with the initial icon and click action.
     ///
     /// Requirement 14.2: Image appears sharp at all Retina resolutions.
     /// Custom lettermark is drawn at each backing scale via `StopTypingMenuBarMark`.
@@ -157,7 +143,9 @@ final class MenuBarController {
         button.image = image
         button.toolTip = "Stop Typing — Voice Dictation"
 
-        statusItem.menu = menu
+        button.action = #selector(PopoverToggleTarget.togglePopover(_:))
+        button.target = PopoverToggleTarget.shared
+        PopoverToggleTarget.shared.controller = self
     }
 
     /// Builds the menu bar status image: programmatic "ST" mark (Stitch colors), or template when Increase Contrast is on.
@@ -172,454 +160,89 @@ final class MenuBarController {
         )
     }
 
-    // MARK: - Menu branding (Stop Typing / Stitch palette)
+    // MARK: - Popover Configuration
 
-    /// Syncs menu appearance, typography, and row content.
-    /// Most rows use `StopTypingMenuRowView` (Phase 2); the language parent item stays system-drawn so the submenu chevron appears.
-    ///
-    /// Call when the menu opens and when observed settings/state change so Increase Contrast and related settings stay correct.
-    /// Manual checks: light vs dark *menu bar* (menu panel stays dark), Reduce Transparency, VoiceOver (Phase 1 a11y pass).
-    func refreshMenuBranding() {
-        syncMenuChrome()
-        syncLanguageHeaderItemLegacy()
-        syncMainMenuCustomRowsExceptRecording()
-        updateRecordingMenuItem()
-        syncLanguageSubmenuCustomRows()
-        refreshUpdateMenuRow()
+    private func configurePopover() {
+        popover.behavior = .transient
+        popover.appearance = NSAppearance(named: .darkAqua)
+        popover.animates = !themeEngine.reduceMotion
+        popover.contentSize = NSSize(width: 280, height: 10)
+        rebuildPopoverContent()
     }
 
-    private func syncMenuChrome() {
-        // Always use dark menu chrome for this status-item menu. Matching `isDarkMode` with `.aqua`
-        // produced a light frosted panel while row text/icons use bright Stitch teals — very low contrast
-        // on light wallpapers; `.darkAqua` keeps accents legible regardless of system appearance.
-        let darkMenuAppearance = NSAppearance(named: .darkAqua)
-        menu.appearance = darkMenuAppearance
-        languageSubmenu.appearance = darkMenuAppearance
-        let bodyFont = NSFont.systemFont(ofSize: 13, weight: .medium)
-        menu.font = bodyFont
-        languageSubmenu.font = bodyFont
-        menu.minimumWidth = StopTypingMenuRowView.rowWidth
-        languageSubmenu.minimumWidth = StopTypingMenuRowView.rowWidth
-    }
-
-    /// SF Symbol for a menu row: brand palette, or template when Increase Contrast is enabled.
-    private func menuPaletteImage(
-        symbolName: String,
-        accessibilityDescription: String,
-        tint: NSColor
-    ) -> NSImage? {
-        guard let base = NSImage(
-            systemSymbolName: symbolName,
-            accessibilityDescription: accessibilityDescription
-        ) else { return nil }
-
-        if themeEngine.increaseContrast {
-            base.isTemplate = true
-            return base
-        }
-
-        let config = NSImage.SymbolConfiguration(paletteColors: [tint])
-        guard let configured = base.withSymbolConfiguration(config) else {
-            base.isTemplate = true
-            return base
-        }
-        configured.isTemplate = false
-        return configured
-    }
-
-    private func menuBodyAttributes(accent: NSColor) -> [NSAttributedString.Key: Any] {
-        let font = menu.font ?? NSFont.menuFont(ofSize: NSFont.systemFontSize)
-        if themeEngine.increaseContrast {
-            return [.font: font]
-        }
-        return [
-            .font: font,
-            .foregroundColor: accent,
-        ]
-    }
-
-    /// Phase 1-style row: language parent keeps system submenu chevron (`view` would hide it).
-    private func setPlainMenuTitle(_ item: NSMenuItem, plain: String, accent: NSColor) {
-        item.title = plain
-        if themeEngine.increaseContrast {
-            item.attributedTitle = nil
-        } else {
-            item.attributedTitle = NSAttributedString(string: plain, attributes: menuBodyAttributes(accent: accent))
-        }
-    }
-
-    private func syncLanguageHeaderItemLegacy() {
-        languageMenuItem.view = nil
-        languageMenuItem.image = menuPaletteImage(
-            symbolName: themeEngine.actionSymbol(.language),
-            accessibilityDescription: "Language",
-            tint: StopTypingBrand.primary
+    /// Rebuilds the popover's content view controller with current state.
+    private func rebuildPopoverContent() {
+        let actions = PopoverActions(
+            toggleRecording: { [weak self] in self?.toggleRecording() },
+            openSettings: { [weak self] in self?.openSettings() },
+            openModelManagement: { [weak self] in self?.openModelManagement() },
+            selectAutoDetect: { [weak self] in self?.selectAutoDetect() },
+            selectLanguage: { [weak self] code in self?.selectLanguage(code) },
+            openUpdateDownload: { [weak self] in self?.openUpdateDownload() },
+            showCLIInstallDialog: { [weak self] in self?.showCLIInstallDialog() },
+            quitApp: { [weak self] in self?.quitApp() },
+            dismiss: { [weak self] in self?.closePopover() }
         )
-        setPlainMenuTitle(languageMenuItem, plain: languageDisplayTitle(), accent: StopTypingBrand.primary)
-    }
 
-    private func rowView(for item: NSMenuItem) -> StopTypingMenuRowView {
-        if let existing = item.view as? StopTypingMenuRowView {
-            return existing
-        }
-        let row = StopTypingMenuRowView(
-            frame: NSRect(
-                x: 0,
-                y: 0,
-                width: StopTypingMenuRowView.rowWidth,
-                height: StopTypingMenuRowView.rowHeight
-            )
-        )
-        item.view = row
-        return row
-    }
-
-    private var templateSymbols: Bool { themeEngine.increaseContrast }
-
-    private func menuTitleTextColor(accent: NSColor) -> NSColor {
-        templateSymbols ? .labelColor : StopTypingBrand.onSurface
-    }
-
-    private func menuTrailingTextColor(accent: NSColor) -> NSColor {
-        templateSymbols ? .secondaryLabelColor : accent.withAlphaComponent(0.9)
-    }
-
-    private func syncMainMenuCustomRowsExceptRecording() {
-        if let item = settingsMenuItemRef {
-            item.image = nil
-            item.attributedTitle = nil
-            let img = menuPaletteImage(
-                symbolName: themeEngine.actionSymbol(.settings),
-                accessibilityDescription: "Settings",
-                tint: StopTypingBrand.primary
-            )
-            rowView(for: item).configure(
-                menuItem: item,
-                symbolImage: img,
-                title: item.title,
-                trailingText: item.stopTypingShortcutDisplay,
-                checkmarkSelected: false,
-                titleColor: menuTitleTextColor(accent: StopTypingBrand.primary),
-                trailingColor: menuTrailingTextColor(accent: StopTypingBrand.primary),
-                templateSymbol: templateSymbols
-            )
-        }
-        if let item = modelMenuItemRef {
-            item.image = nil
-            item.attributedTitle = nil
-            let img = menuPaletteImage(
-                symbolName: themeEngine.actionSymbol(.model),
-                accessibilityDescription: "Model Management",
-                tint: StopTypingBrand.primary
-            )
-            rowView(for: item).configure(
-                menuItem: item,
-                symbolImage: img,
-                title: item.title,
-                trailingText: item.stopTypingShortcutDisplay,
-                checkmarkSelected: false,
-                titleColor: menuTitleTextColor(accent: StopTypingBrand.primary),
-                trailingColor: menuTrailingTextColor(accent: StopTypingBrand.primary),
-                templateSymbol: templateSymbols
-            )
-        }
-        if let item = cliInstallMenuItem {
-            item.image = nil
-            item.attributedTitle = nil
-            let img = menuPaletteImage(
-                symbolName: SFSymbols.terminal,
-                accessibilityDescription: "Install CLI",
-                tint: StopTypingBrand.primary
-            )
-            rowView(for: item).configure(
-                menuItem: item,
-                symbolImage: img,
-                title: item.title,
-                trailingText: item.stopTypingShortcutDisplay,
-                checkmarkSelected: false,
-                titleColor: menuTitleTextColor(accent: StopTypingBrand.primary),
-                trailingColor: menuTrailingTextColor(accent: StopTypingBrand.primary),
-                templateSymbol: templateSymbols
-            )
-        }
-        if let item = quitMenuItemRef {
-            item.image = nil
-            item.attributedTitle = nil
-            let img = menuPaletteImage(
-                symbolName: themeEngine.actionSymbol(.quit),
-                accessibilityDescription: "Quit",
-                tint: StopTypingBrand.secondary
-            )
-            rowView(for: item).configure(
-                menuItem: item,
-                symbolImage: img,
-                title: item.title,
-                trailingText: item.stopTypingShortcutDisplay,
-                checkmarkSelected: false,
-                titleColor: templateSymbols ? .labelColor : StopTypingBrand.secondary,
-                trailingColor: menuTrailingTextColor(accent: StopTypingBrand.secondary),
-                templateSymbol: templateSymbols
-            )
-        }
-    }
-
-    private func syncLanguageSubmenuCustomRows() {
-        for item in languageSubmenu.items where !item.isSeparatorItem {
-            item.image = nil
-            item.attributedTitle = nil
-            let selected = item.state == .on
-            rowView(for: item).configure(
-                menuItem: item,
-                symbolImage: nil,
-                title: item.title,
-                trailingText: nil,
-                checkmarkSelected: selected,
-                titleColor: menuTitleTextColor(accent: StopTypingBrand.primary),
-                trailingColor: menuTrailingTextColor(accent: StopTypingBrand.primary),
-                templateSymbol: templateSymbols
-            )
-        }
-    }
-
-    private func refreshUpdateMenuRow() {
-        guard !updateMenuItem.isHidden else { return }
-        let plain = updateMenuItem.title
-        guard !plain.isEmpty else { return }
-        updateMenuItem.image = nil
-        updateMenuItem.attributedTitle = nil
-        let img = menuPaletteImage(
-            symbolName: SFSymbols.download,
-            accessibilityDescription: "Update Available",
-            tint: StopTypingBrand.primaryContainer
-        )
-        rowView(for: updateMenuItem).configure(
-            menuItem: updateMenuItem,
-            symbolImage: img,
-            title: plain,
-            trailingText: updateMenuItem.stopTypingShortcutDisplay,
-            checkmarkSelected: false,
-            titleColor: menuTitleTextColor(accent: StopTypingBrand.primaryContainer),
-            trailingColor: menuTrailingTextColor(accent: StopTypingBrand.primaryContainer),
-            templateSymbol: templateSymbols
-        )
-    }
-
-    // MARK: - Menu Construction
-
-    /// Builds the dropdown menu with all required items.
-    ///
-    /// Requirement 5.3: Menu contains Start/Stop Recording, Settings,
-    /// Model Management, Language Selection, and Quit.
-    private func buildMenu() {
-        menu.removeAllItems()
-
-        // Start/Stop Recording
-        updateRecordingMenuItem()
-        menu.addItem(recordingMenuItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        // Language Selection
-        languageMenuItem.title = languageDisplayTitle()
-        languageMenuItem.submenu = languageSubmenu
-        buildLanguageSubmenu()
-        menu.addItem(languageMenuItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        // Settings
-        let settingsItem = NSMenuItem(
-            title: "Settings…",
-            action: #selector(MenuBarActionHandler.openSettings(_:)),
-            keyEquivalent: ","
-        )
-        settingsMenuItemRef = settingsItem
-        menu.addItem(settingsItem)
-
-        // Model Management
-        let modelItem = NSMenuItem(
-            title: "Model Management…",
-            action: #selector(MenuBarActionHandler.openModelManagement(_:)),
-            keyEquivalent: ""
-        )
-        modelMenuItemRef = modelItem
-        menu.addItem(modelItem)
-
-        // Update Available (shown dynamically)
-        updateMenuItem.title = ""
-        updateMenuItem.action = #selector(MenuBarActionHandler.openUpdateDownload(_:))
-        updateMenuItem.target = MenuBarActionHandler.shared
-        updateMenuItem.isHidden = true
-        updateSeparator.isHidden = true
-        menu.addItem(updateSeparator)
-        menu.addItem(updateMenuItem)
-
-        refreshUpdateMenuItem()
-
-        // Install CLI (hidden dynamically when installed)
-        menu.addItem(cliInstallSeparator)
-        let installCLIItem = NSMenuItem(
-            title: "Install Command Line Tool\u{2026}",
-            action: #selector(MenuBarActionHandler.showCLIInstallDialog(_:)),
-            keyEquivalent: ""
-        )
-        menu.addItem(installCLIItem)
-        cliInstallMenuItem = installCLIItem
-        refreshCLIInstallMenuItem()
-
-        menu.addItem(NSMenuItem.separator())
-
-        // Quit
-        let quitItem = NSMenuItem(
-            title: "Quit Stop Typing",
-            action: #selector(MenuBarActionHandler.quitApp(_:)),
-            keyEquivalent: "q"
-        )
-        quitMenuItemRef = quitItem
-        menu.addItem(quitItem)
-
-        // Set the shared action handler as the target for all items
-        let handler = MenuBarActionHandler.shared
-        handler.menuBarController = self
-        for item in menu.items where item.action != nil {
-            item.target = handler
-        }
-    }
-
-    // MARK: - Recording Menu Item
-
-    /// Updates the recording menu item title and action based on current state.
-    private func updateRecordingMenuItem() {
-        let isRecording = stateManager.appState == .recording
         let shortcut = KeyCodeMapping.shared.hotkeyDisplayString(
             keyCode: settingsStore.hotkeyKeyCode,
             modifiers: settingsStore.hotkeyModifiers
         )
-        let label = isRecording ? "Stop Recording" : "Start Recording"
-        recordingMenuItem.title = label
-        recordingMenuItem.action = #selector(MenuBarActionHandler.toggleRecording(_:))
-        recordingMenuItem.target = MenuBarActionHandler.shared
-        recordingMenuItem.image = nil
-        recordingMenuItem.attributedTitle = nil
 
-        let symbolName = isRecording
-            ? themeEngine.menuBarSymbol(for: .recording)
-            : themeEngine.menuBarSymbol(for: .idle)
-        let tint = isRecording ? StopTypingBrand.secondary : StopTypingBrand.primary
-        let img = menuPaletteImage(
-            symbolName: symbolName,
-            accessibilityDescription: isRecording ? "Stop Recording" : "Start Recording",
-            tint: tint
+        let popoverView = StopTypingPopoverView(
+            appState: stateManager.appState,
+            languageMode: settingsStore.languageMode,
+            hotkeyDisplayString: shortcut,
+            availableUpdate: updateChecker.availableUpdate,
+            isCLIInstalled: isCLIInstalled(),
+            actions: actions
         )
-        rowView(for: recordingMenuItem).configure(
-            menuItem: recordingMenuItem,
-            symbolImage: img,
-            title: label,
-            trailingText: shortcut,
-            checkmarkSelected: false,
-            titleColor: templateSymbols ? .labelColor : tint,
-            trailingColor: menuTrailingTextColor(accent: tint),
-            templateSymbol: templateSymbols
-        )
+        .environment(themeEngine)
 
-        // Disable during processing
-        recordingMenuItem.isEnabled = stateManager.appState != .processing
+        let hostingController = NSHostingController(rootView: popoverView)
+        hostingController.sizingOptions = [.preferredContentSize]
+        popover.contentViewController = hostingController
     }
 
-    // MARK: - CLI Install Menu Item
+    // MARK: - Popover Toggle
 
-    /// Hides the CLI install menu item once the symlink is in place.
-    func refreshCLIInstallMenuItem() {
-        let installed = isCLIInstalled()
-        cliInstallMenuItem?.isHidden = installed
-        cliInstallSeparator.isHidden = installed
-    }
-
-    // MARK: - Update Menu Item
-
-    /// Refreshes the update menu item visibility and title based on `updateChecker.availableUpdate`.
-    private func refreshUpdateMenuItem() {
-        if let update = updateChecker.availableUpdate {
-            Log.updateChecker.info("Menu item shown — update available: \(update.version)")
-            updateMenuItem.title = "Update Available: \(update.version)"
-            updateMenuItem.isHidden = false
-            updateSeparator.isHidden = false
+    /// Toggles the popover visibility when the status bar button is clicked.
+    func togglePopoverVisibility() {
+        if popover.isShown {
+            closePopover()
         } else {
-            Log.updateChecker.debug("Menu item hidden — no update available")
-            updateMenuItem.isHidden = true
-            updateSeparator.isHidden = true
+            showPopover()
         }
     }
 
-    /// Opens the download URL for the available update.
-    func openUpdateDownload() {
-        guard let update = updateChecker.availableUpdate else {
-            Log.updateChecker.error("openUpdateDownload called but no update available")
-            return
-        }
-        Log.updateChecker.info("User opening download URL: \(update.downloadURL.absoluteString)")
-        NSWorkspace.shared.open(update.downloadURL)
+    private func showPopover() {
+        guard let button = statusItem.button else { return }
+        rebuildPopoverContent()
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        installEventMonitor()
     }
 
-    // MARK: - Language Display
+    private func closePopover() {
+        popover.performClose(nil)
+        removeEventMonitor()
+    }
 
-    /// Returns the display title for the language menu item.
-    ///
-    /// Requirement 16.7: Display current language or auto-detect indicator.
-    private func languageDisplayTitle() -> String {
-        switch settingsStore.languageMode {
-        case .autoDetect:
-            return "Language: Auto-Detect"
-        case .specific(let code):
-            return "Language: \(languageDisplayName(for: code))"
-        case .pinned(let code):
-            return "Language: \(languageDisplayName(for: code)) (Pinned)"
+    /// Installs a global event monitor to close the popover on outside clicks,
+    /// supplementing NSPopover's `.transient` behavior.
+    private func installEventMonitor() {
+        removeEventMonitor()
+        eventMonitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown]
+        ) { [weak self] _ in
+            guard let self, self.popover.isShown else { return }
+            self.closePopover()
         }
     }
 
-    /// Returns a human-readable name for a language code.
-    private func languageDisplayName(for code: String) -> String {
-        let locale = Locale.current
-        return locale.localizedString(forLanguageCode: code)?.capitalized ?? code.uppercased()
-    }
-
-    // MARK: - Language Submenu
-
-    /// Builds the language selection submenu.
-    ///
-    /// Requirement 16.8: Language selection control in the menu bar dropdown.
-    private func buildLanguageSubmenu() {
-        languageSubmenu.removeAllItems()
-
-        // Auto-Detect option
-        let autoItem = NSMenuItem(
-            title: "Auto-Detect",
-            action: #selector(MenuBarActionHandler.selectAutoDetect(_:)),
-            keyEquivalent: ""
-        )
-        autoItem.target = MenuBarActionHandler.shared
-        if settingsStore.languageMode.isAutoDetect {
-            autoItem.state = .on
-        }
-        languageSubmenu.addItem(autoItem)
-
-        languageSubmenu.addItem(NSMenuItem.separator())
-
-        for lang in SupportedLanguage.all {
-            let item = NSMenuItem(
-                title: lang.name,
-                action: #selector(MenuBarActionHandler.selectLanguage(_:)),
-                keyEquivalent: ""
-            )
-            item.target = MenuBarActionHandler.shared
-            item.representedObject = lang.id
-
-            // Mark the currently selected language
-            if let currentCode = settingsStore.languageMode.languageCode,
-               currentCode == lang.id {
-                item.state = .on
-            }
-            languageSubmenu.addItem(item)
+    private func removeEventMonitor() {
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
         }
     }
 
@@ -650,8 +273,6 @@ final class MenuBarController {
         button.image = image
         button.toolTip = description
 
-        // Drive animation via Core Animation (runs on the render server,
-        // zero main-thread or Swift Concurrency executor overhead).
         if state == .processing {
             startProcessingAnimation()
         } else {
@@ -692,22 +313,20 @@ final class MenuBarController {
 
     // MARK: - State Observation
 
-    /// Starts observing StateManager for app state changes to update the icon and menu.
+    /// Starts observing StateManager for app state changes to update the icon and popover.
     private func startObservingState() {
         observationTask = Task { [weak self] in
             guard let self else { return }
-            // Use withObservationTracking in a loop to react to state changes
             while !Task.isCancelled {
                 let currentState = self.stateManager.appState
                 _ = self.settingsStore.languageMode
 
                 self.updateIcon(for: currentState)
-                self.refreshUpdateMenuItem()
-                self.languageMenuItem.title = self.languageDisplayTitle()
-                self.buildLanguageSubmenu()
-                self.refreshMenuBranding()
 
-                // Wait for the next change using Observation framework
+                if self.popover.isShown {
+                    self.rebuildPopoverContent()
+                }
+
                 await withCheckedContinuation { continuation in
                     withObservationTracking {
                         _ = self.stateManager.appState
@@ -730,9 +349,10 @@ final class MenuBarController {
         observationTask?.cancel()
         observationTask = nil
         stopProcessingAnimation()
+        removeEventMonitor()
     }
 
-    // MARK: - Actions (called by MenuBarActionHandler)
+    // MARK: - Actions (called by PopoverActions closures)
 
     /// Toggles recording on/off.
     ///
@@ -850,7 +470,6 @@ final class MenuBarController {
             return
         }
 
-        // Discard any previously closed window to avoid stale hosting controller state.
         cliInstallWindow = nil
 
         let window = NSWindow()
@@ -875,6 +494,16 @@ final class MenuBarController {
         cliInstallWindow = window
     }
 
+    /// Opens the download URL for the available update.
+    func openUpdateDownload() {
+        guard let update = updateChecker.availableUpdate else {
+            Log.updateChecker.error("openUpdateDownload called but no update available")
+            return
+        }
+        Log.updateChecker.info("User opening download URL: \(update.downloadURL.absoluteString)")
+        NSWorkspace.shared.open(update.downloadURL)
+    }
+
     /// Quits the application after cleaning up resources.
     ///
     /// Requirement 5.5: Clean up all resources and terminate.
@@ -884,95 +513,16 @@ final class MenuBarController {
     }
 }
 
-// MARK: - NSMenuItem shortcut display (custom rows hide system key column)
+// MARK: - Popover Toggle Target
 
-private extension NSMenuItem {
-    /// Keyboard shortcut as shown in the trailing column (e.g. `⌘,`, `⌘Q`).
-    var stopTypingShortcutDisplay: String? {
-        guard !keyEquivalent.isEmpty else { return nil }
-        var parts = ""
-        let m = keyEquivalentModifierMask
-        if m.contains(.command) { parts += "⌘" }
-        if m.contains(.shift) { parts += "⇧" }
-        if m.contains(.option) { parts += "⌥" }
-        if m.contains(.control) { parts += "⌃" }
-        if keyEquivalent == "," {
-            parts += ","
-        } else if keyEquivalent == " " {
-            parts += "Space"
-        } else {
-            parts += keyEquivalent.uppercased()
-        }
-        return parts
-    }
-}
+/// Bridges the NSStatusBarButton action to MenuBarController (requires @objc).
+final class PopoverToggleTarget: NSObject {
+    static let shared = PopoverToggleTarget()
 
-// MARK: - Menu Open Delegate
-
-/// Refreshes filesystem-dependent menu items each time the dropdown opens.
-final class MenuOpenDelegate: NSObject, NSMenuDelegate {
-    private weak var controller: MenuBarController?
-
-    init(controller: MenuBarController) {
-        self.controller = controller
-    }
-
-    func menuWillOpen(_ menu: NSMenu) {
-        controller?.refreshCLIInstallMenuItem()
-        controller?.refreshMenuBranding()
-    }
-}
-
-// MARK: - Menu Action Handler
-
-/// A helper class that bridges NSMenuItem target-action to MenuBarController.
-///
-/// NSMenuItem requires an `@objc` target. This is one of the unavoidable
-/// AppKit bridging points per Requirement 15.7.
-final class MenuBarActionHandler: NSObject {
-    static let shared = MenuBarActionHandler()
-
-    /// Weak reference to the MenuBarController to forward actions.
-    weak var menuBarController: MenuBarController?
+    weak var controller: MenuBarController?
 
     @MainActor
-    @objc func toggleRecording(_ sender: NSMenuItem) {
-        menuBarController?.toggleRecording()
-    }
-
-    @MainActor
-    @objc func openSettings(_ sender: NSMenuItem) {
-        menuBarController?.openSettings()
-    }
-
-    @MainActor
-    @objc func openModelManagement(_ sender: NSMenuItem) {
-        menuBarController?.openModelManagement()
-    }
-
-    @MainActor
-    @objc func selectAutoDetect(_ sender: NSMenuItem) {
-        menuBarController?.selectAutoDetect()
-    }
-
-    @MainActor
-    @objc func selectLanguage(_ sender: NSMenuItem) {
-        guard let code = sender.representedObject as? String else { return }
-        menuBarController?.selectLanguage(code)
-    }
-
-    @MainActor
-    @objc func openUpdateDownload(_ sender: NSMenuItem) {
-        menuBarController?.openUpdateDownload()
-    }
-
-    @MainActor
-    @objc func showCLIInstallDialog(_ sender: NSMenuItem) {
-        menuBarController?.showCLIInstallDialog()
-    }
-
-    @MainActor
-    @objc func quitApp(_ sender: NSMenuItem) {
-        menuBarController?.quitApp()
+    @objc func togglePopover(_ sender: Any?) {
+        controller?.togglePopoverVisibility()
     }
 }

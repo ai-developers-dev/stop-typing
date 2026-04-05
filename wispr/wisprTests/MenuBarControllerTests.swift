@@ -3,7 +3,7 @@
 //  wispr
 //
 //  Unit tests for MenuBarController: status item creation, icon state updates,
-//  menu structure, language display, and accessibility labels.
+//  popover lifecycle, language display, and accessibility labels.
 //  Requirements: 5.3, 5.4, 17.10
 //
 
@@ -64,10 +64,6 @@ struct MenuBarControllerInitTests {
     @Test("MenuBarController creates a status item on init without crashing")
     func testStatusItemCreated() {
         let (controller, _, _, _) = createTestController()
-
-        // The controller is created successfully — the status item
-        // is set up internally during init. We verify by calling
-        // stopObserving which exercises the observation lifecycle.
         controller.stopObserving()
     }
 }
@@ -116,32 +112,37 @@ struct MenuBarControllerIconTests {
     }
 }
 
-// MARK: - Menu Structure Tests (Requirement 5.3)
+// MARK: - Popover Tests (Requirement 5.3)
 
 @MainActor
-@Suite("MenuBarController Menu Structure Tests")
-struct MenuBarControllerMenuTests {
+@Suite("MenuBarController Popover Tests")
+struct MenuBarControllerPopoverTests {
 
-    @Test("Menu contains recording, language, settings, model management, and quit items")
-    func testMenuItemCount() {
+    @Test("Popover is configured with transient behavior")
+    func testPopoverBehavior() {
         let (controller, _, _, _) = createTestController()
-
-        // The menu is private, but we can verify the controller was built
-        // without errors. The menu structure is:
-        // 0: Start/Stop Recording
-        // 1: Separator
-        // 2: Language (with submenu)
-        // 3: Separator
-        // 4: Settings…
-        // 5: Model Management…
-        // 6: Separator
-        // 7: Quit Stop Typing
-        // Total: 8 items (5 actionable + 3 separators)
-        // Verified by successful init — menu is built in buildMenu().
+        let popover = controller.popoverForTesting
+        #expect(popover.behavior == .transient, "Popover should use transient behavior for auto-dismiss")
         controller.stopObserving()
     }
 
-    @Test("Menu action symbols are correctly mapped")
+    @Test("Popover has dark appearance")
+    func testPopoverAppearance() {
+        let (controller, _, _, _) = createTestController()
+        let popover = controller.popoverForTesting
+        #expect(popover.appearance?.name == .darkAqua, "Popover should force darkAqua appearance")
+        controller.stopObserving()
+    }
+
+    @Test("Popover has a content view controller on init")
+    func testPopoverHasContent() {
+        let (controller, _, _, _) = createTestController()
+        let popover = controller.popoverForTesting
+        #expect(popover.contentViewController != nil, "Popover should have a content view controller")
+        controller.stopObserving()
+    }
+
+    @Test("Action symbols are correctly mapped for popover rows")
     func testActionSymbols() {
         let themeEngine = UIThemeEngine()
 
@@ -262,7 +263,7 @@ struct MenuBarControllerAccessibilityTests {
         #expect(image?.accessibilityDescription == "Stop Typing — Error")
     }
 
-    @Test("All SF Symbol names used in menu items resolve to valid images")
+    @Test("All SF Symbol names used in popover rows resolve to valid images")
     func testMenuItemSymbolsResolve() {
         let themeEngine = UIThemeEngine()
         let actions: [UIThemeEngine.ActionSymbol] = [
@@ -318,37 +319,5 @@ struct StopTypingMenuBarMarkTests {
             accessibilityDescription: nil
         )
         #expect(img.isTemplate == true)
-    }
-}
-
-// MARK: - Menu branding
-
-@MainActor
-@Suite("MenuBarController Menu Branding Tests")
-struct MenuBarControllerMenuBrandingTests {
-
-    @Test("refreshMenuBranding completes without throwing")
-    func testRefreshMenuBrandingRuns() {
-        let (controller, _, _, _) = createTestController()
-        controller.refreshMenuBranding()
-        controller.stopObserving()
-    }
-
-    @Test("refreshMenuBranding with Increase Contrast uses template symbols on custom row views")
-    func testRefreshMenuBrandingIncreaseContrastTemplates() {
-        let (controller, _, _, themeEngine) = createTestController()
-        themeEngine.increaseContrast = true
-        controller.refreshMenuBranding()
-
-        let menu = controller.menuForTesting
-        for item in menu.items {
-            if let row = item.view as? StopTypingMenuRowView {
-                #expect(row.isUsingTemplateSymbol == true, "Custom rows use template SF Symbols when Increase Contrast is on")
-                continue
-            }
-            guard let image = item.image else { continue }
-            #expect(image.isTemplate == true, "Legacy header row images should be template when Increase Contrast is on")
-        }
-        controller.stopObserving()
     }
 }
