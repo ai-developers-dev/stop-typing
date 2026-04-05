@@ -334,7 +334,7 @@ struct MenuBarControllerMenuBrandingTests {
         controller.stopObserving()
     }
 
-    @Test("refreshMenuBranding with Increase Contrast uses template images on palette rows")
+    @Test("refreshMenuBranding with Increase Contrast uses template symbols on custom row views")
     func testRefreshMenuBrandingIncreaseContrastTemplates() {
         let (controller, _, _, themeEngine) = createTestController()
         themeEngine.increaseContrast = true
@@ -342,8 +342,12 @@ struct MenuBarControllerMenuBrandingTests {
 
         let menu = controller.menuForTesting
         for item in menu.items {
+            if let row = item.view as? StopTypingMenuRowView {
+                #expect(row.isUsingTemplateSymbol == true, "Custom rows use template SF Symbols when Increase Contrast is on")
+                continue
+            }
             guard let image = item.image else { continue }
-            #expect(image.isTemplate == true, "Row images should be template when Increase Contrast is on")
+            #expect(image.isTemplate == true, "Legacy header row images should be template when Increase Contrast is on")
         }
         controller.stopObserving()
     }

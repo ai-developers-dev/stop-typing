@@ -96,6 +96,9 @@ final class MenuBarController {
     private let updateSeparator = NSMenuItem.separator()
     private let cliInstallSeparator = NSMenuItem.separator()
     private var cliInstallMenuItem: NSMenuItem?
+    private var settingsMenuItemRef: NSMenuItem?
+    private var modelMenuItemRef: NSMenuItem?
+    private var quitMenuItemRef: NSMenuItem?
 
     // MARK: - Initialization
 
@@ -171,16 +174,18 @@ final class MenuBarController {
 
     // MARK: - Menu branding (Stop Typing / Stitch palette)
 
-    /// Syncs menu appearance, typography, tinted SF Symbols, and optional attributed titles.
+    /// Syncs menu appearance, typography, and row content.
+    /// Most rows use `StopTypingMenuRowView` (Phase 2); the language parent item stays system-drawn so the submenu chevron appears.
     ///
     /// Call when the menu opens and when observed settings/state change so Increase Contrast and related settings stay correct.
     /// Manual checks: light vs dark *menu bar* (menu panel stays dark), Reduce Transparency, VoiceOver (Phase 1 a11y pass).
     func refreshMenuBranding() {
         syncMenuChrome()
-        syncMenuItemPaletteImages()
-        applyLanguageSubmenuAttributedTitles()
-        refreshUpdateMenuItemPresentation()
+        syncLanguageHeaderItemLegacy()
+        syncMainMenuCustomRowsExceptRecording()
         updateRecordingMenuItem()
+        syncLanguageSubmenuCustomRows()
+        refreshUpdateMenuRow()
     }
 
     private func syncMenuChrome() {
@@ -193,6 +198,8 @@ final class MenuBarController {
         let bodyFont = NSFont.systemFont(ofSize: 13, weight: .medium)
         menu.font = bodyFont
         languageSubmenu.font = bodyFont
+        menu.minimumWidth = StopTypingMenuRowView.rowWidth
+        languageSubmenu.minimumWidth = StopTypingMenuRowView.rowWidth
     }
 
     /// SF Symbol for a menu row: brand palette, or template when Increase Contrast is enabled.
@@ -231,6 +238,7 @@ final class MenuBarController {
         ]
     }
 
+    /// Phase 1-style row: language parent keeps system submenu chevron (`view` would hide it).
     private func setPlainMenuTitle(_ item: NSMenuItem, plain: String, accent: NSColor) {
         item.title = plain
         if themeEngine.increaseContrast {
@@ -240,72 +248,159 @@ final class MenuBarController {
         }
     }
 
-    private func syncMenuItemPaletteImages() {
+    private func syncLanguageHeaderItemLegacy() {
+        languageMenuItem.view = nil
         languageMenuItem.image = menuPaletteImage(
             symbolName: themeEngine.actionSymbol(.language),
             accessibilityDescription: "Language",
             tint: StopTypingBrand.primary
         )
         setPlainMenuTitle(languageMenuItem, plain: languageDisplayTitle(), accent: StopTypingBrand.primary)
+    }
 
-        for item in menu.items {
-            guard let action = item.action else { continue }
-            if action == #selector(MenuBarActionHandler.toggleRecording(_:)) {
-                continue
-            }
-            if action == #selector(MenuBarActionHandler.openSettings(_:)) {
-                item.image = menuPaletteImage(
-                    symbolName: themeEngine.actionSymbol(.settings),
-                    accessibilityDescription: "Settings",
-                    tint: StopTypingBrand.primary
-                )
-                setPlainMenuTitle(item, plain: item.title, accent: StopTypingBrand.primary)
-            } else if action == #selector(MenuBarActionHandler.openModelManagement(_:)) {
-                item.image = menuPaletteImage(
-                    symbolName: themeEngine.actionSymbol(.model),
-                    accessibilityDescription: "Model Management",
-                    tint: StopTypingBrand.primary
-                )
-                setPlainMenuTitle(item, plain: item.title, accent: StopTypingBrand.primary)
-            } else if action == #selector(MenuBarActionHandler.openUpdateDownload(_:)) {
-                item.image = menuPaletteImage(
-                    symbolName: SFSymbols.download,
-                    accessibilityDescription: "Update Available",
-                    tint: StopTypingBrand.primaryContainer
-                )
-            } else if action == #selector(MenuBarActionHandler.showCLIInstallDialog(_:)) {
-                item.image = menuPaletteImage(
-                    symbolName: SFSymbols.terminal,
-                    accessibilityDescription: "Install CLI",
-                    tint: StopTypingBrand.primary
-                )
-                setPlainMenuTitle(item, plain: item.title, accent: StopTypingBrand.primary)
-            } else if action == #selector(MenuBarActionHandler.quitApp(_:)) {
-                item.image = menuPaletteImage(
-                    symbolName: themeEngine.actionSymbol(.quit),
-                    accessibilityDescription: "Quit",
-                    tint: StopTypingBrand.secondary
-                )
-                setPlainMenuTitle(item, plain: item.title, accent: StopTypingBrand.secondary)
-            }
+    private func rowView(for item: NSMenuItem) -> StopTypingMenuRowView {
+        if let existing = item.view as? StopTypingMenuRowView {
+            return existing
+        }
+        let row = StopTypingMenuRowView(
+            frame: NSRect(
+                x: 0,
+                y: 0,
+                width: StopTypingMenuRowView.rowWidth,
+                height: StopTypingMenuRowView.rowHeight
+            )
+        )
+        item.view = row
+        return row
+    }
+
+    private var templateSymbols: Bool { themeEngine.increaseContrast }
+
+    private func menuTitleTextColor(accent: NSColor) -> NSColor {
+        templateSymbols ? .labelColor : StopTypingBrand.onSurface
+    }
+
+    private func menuTrailingTextColor(accent: NSColor) -> NSColor {
+        templateSymbols ? .secondaryLabelColor : accent.withAlphaComponent(0.9)
+    }
+
+    private func syncMainMenuCustomRowsExceptRecording() {
+        if let item = settingsMenuItemRef {
+            item.image = nil
+            item.attributedTitle = nil
+            let img = menuPaletteImage(
+                symbolName: themeEngine.actionSymbol(.settings),
+                accessibilityDescription: "Settings",
+                tint: StopTypingBrand.primary
+            )
+            rowView(for: item).configure(
+                menuItem: item,
+                symbolImage: img,
+                title: item.title,
+                trailingText: item.stopTypingShortcutDisplay,
+                checkmarkSelected: false,
+                titleColor: menuTitleTextColor(accent: StopTypingBrand.primary),
+                trailingColor: menuTrailingTextColor(accent: StopTypingBrand.primary),
+                templateSymbol: templateSymbols
+            )
+        }
+        if let item = modelMenuItemRef {
+            item.image = nil
+            item.attributedTitle = nil
+            let img = menuPaletteImage(
+                symbolName: themeEngine.actionSymbol(.model),
+                accessibilityDescription: "Model Management",
+                tint: StopTypingBrand.primary
+            )
+            rowView(for: item).configure(
+                menuItem: item,
+                symbolImage: img,
+                title: item.title,
+                trailingText: item.stopTypingShortcutDisplay,
+                checkmarkSelected: false,
+                titleColor: menuTitleTextColor(accent: StopTypingBrand.primary),
+                trailingColor: menuTrailingTextColor(accent: StopTypingBrand.primary),
+                templateSymbol: templateSymbols
+            )
+        }
+        if let item = cliInstallMenuItem {
+            item.image = nil
+            item.attributedTitle = nil
+            let img = menuPaletteImage(
+                symbolName: SFSymbols.terminal,
+                accessibilityDescription: "Install CLI",
+                tint: StopTypingBrand.primary
+            )
+            rowView(for: item).configure(
+                menuItem: item,
+                symbolImage: img,
+                title: item.title,
+                trailingText: item.stopTypingShortcutDisplay,
+                checkmarkSelected: false,
+                titleColor: menuTitleTextColor(accent: StopTypingBrand.primary),
+                trailingColor: menuTrailingTextColor(accent: StopTypingBrand.primary),
+                templateSymbol: templateSymbols
+            )
+        }
+        if let item = quitMenuItemRef {
+            item.image = nil
+            item.attributedTitle = nil
+            let img = menuPaletteImage(
+                symbolName: themeEngine.actionSymbol(.quit),
+                accessibilityDescription: "Quit",
+                tint: StopTypingBrand.secondary
+            )
+            rowView(for: item).configure(
+                menuItem: item,
+                symbolImage: img,
+                title: item.title,
+                trailingText: item.stopTypingShortcutDisplay,
+                checkmarkSelected: false,
+                titleColor: templateSymbols ? .labelColor : StopTypingBrand.secondary,
+                trailingColor: menuTrailingTextColor(accent: StopTypingBrand.secondary),
+                templateSymbol: templateSymbols
+            )
         }
     }
 
-    private func applyLanguageSubmenuAttributedTitles() {
+    private func syncLanguageSubmenuCustomRows() {
         for item in languageSubmenu.items where !item.isSeparatorItem {
-            setPlainMenuTitle(item, plain: item.title, accent: StopTypingBrand.primary)
+            item.image = nil
+            item.attributedTitle = nil
+            let selected = item.state == .on
+            rowView(for: item).configure(
+                menuItem: item,
+                symbolImage: nil,
+                title: item.title,
+                trailingText: nil,
+                checkmarkSelected: selected,
+                titleColor: menuTitleTextColor(accent: StopTypingBrand.primary),
+                trailingColor: menuTrailingTextColor(accent: StopTypingBrand.primary),
+                templateSymbol: templateSymbols
+            )
         }
     }
 
-    private func refreshUpdateMenuItemPresentation() {
+    private func refreshUpdateMenuRow() {
         guard !updateMenuItem.isHidden else { return }
         let plain = updateMenuItem.title
         guard !plain.isEmpty else { return }
-        setPlainMenuTitle(updateMenuItem, plain: plain, accent: StopTypingBrand.primaryContainer)
-        updateMenuItem.image = menuPaletteImage(
+        updateMenuItem.image = nil
+        updateMenuItem.attributedTitle = nil
+        let img = menuPaletteImage(
             symbolName: SFSymbols.download,
             accessibilityDescription: "Update Available",
             tint: StopTypingBrand.primaryContainer
+        )
+        rowView(for: updateMenuItem).configure(
+            menuItem: updateMenuItem,
+            symbolImage: img,
+            title: plain,
+            trailingText: updateMenuItem.stopTypingShortcutDisplay,
+            checkmarkSelected: false,
+            titleColor: menuTitleTextColor(accent: StopTypingBrand.primaryContainer),
+            trailingColor: menuTrailingTextColor(accent: StopTypingBrand.primaryContainer),
+            templateSymbol: templateSymbols
         )
     }
 
@@ -338,6 +433,7 @@ final class MenuBarController {
             action: #selector(MenuBarActionHandler.openSettings(_:)),
             keyEquivalent: ","
         )
+        settingsMenuItemRef = settingsItem
         menu.addItem(settingsItem)
 
         // Model Management
@@ -346,6 +442,7 @@ final class MenuBarController {
             action: #selector(MenuBarActionHandler.openModelManagement(_:)),
             keyEquivalent: ""
         )
+        modelMenuItemRef = modelItem
         menu.addItem(modelItem)
 
         // Update Available (shown dynamically)
@@ -378,6 +475,7 @@ final class MenuBarController {
             action: #selector(MenuBarActionHandler.quitApp(_:)),
             keyEquivalent: "q"
         )
+        quitMenuItemRef = quitItem
         menu.addItem(quitItem)
 
         // Set the shared action handler as the target for all items
@@ -398,25 +496,31 @@ final class MenuBarController {
             modifiers: settingsStore.hotkeyModifiers
         )
         let label = isRecording ? "Stop Recording" : "Start Recording"
-        let plain = "\(label)\t\(shortcut)"
-        recordingMenuItem.title = plain
+        recordingMenuItem.title = label
         recordingMenuItem.action = #selector(MenuBarActionHandler.toggleRecording(_:))
         recordingMenuItem.target = MenuBarActionHandler.shared
+        recordingMenuItem.image = nil
+        recordingMenuItem.attributedTitle = nil
 
         let symbolName = isRecording
             ? themeEngine.menuBarSymbol(for: .recording)
             : themeEngine.menuBarSymbol(for: .idle)
         let tint = isRecording ? StopTypingBrand.secondary : StopTypingBrand.primary
-        recordingMenuItem.image = menuPaletteImage(
+        let img = menuPaletteImage(
             symbolName: symbolName,
             accessibilityDescription: isRecording ? "Stop Recording" : "Start Recording",
             tint: tint
         )
-        if themeEngine.increaseContrast {
-            recordingMenuItem.attributedTitle = nil
-        } else {
-            recordingMenuItem.attributedTitle = NSAttributedString(string: plain, attributes: menuBodyAttributes(accent: tint))
-        }
+        rowView(for: recordingMenuItem).configure(
+            menuItem: recordingMenuItem,
+            symbolImage: img,
+            title: label,
+            trailingText: shortcut,
+            checkmarkSelected: false,
+            titleColor: templateSymbols ? .labelColor : tint,
+            trailingColor: menuTrailingTextColor(accent: tint),
+            templateSymbol: templateSymbols
+        )
 
         // Disable during processing
         recordingMenuItem.isEnabled = stateManager.appState != .processing
@@ -777,6 +881,29 @@ final class MenuBarController {
     func quitApp() {
         stopObserving()
         NSApp.terminate(nil)
+    }
+}
+
+// MARK: - NSMenuItem shortcut display (custom rows hide system key column)
+
+private extension NSMenuItem {
+    /// Keyboard shortcut as shown in the trailing column (e.g. `⌘,`, `⌘Q`).
+    var stopTypingShortcutDisplay: String? {
+        guard !keyEquivalent.isEmpty else { return nil }
+        var parts = ""
+        let m = keyEquivalentModifierMask
+        if m.contains(.command) { parts += "⌘" }
+        if m.contains(.shift) { parts += "⇧" }
+        if m.contains(.option) { parts += "⌥" }
+        if m.contains(.control) { parts += "⌃" }
+        if keyEquivalent == "," {
+            parts += ","
+        } else if keyEquivalent == " " {
+            parts += "Space"
+        } else {
+            parts += keyEquivalent.uppercased()
+        }
+        return parts
     }
 }
 
