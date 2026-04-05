@@ -48,7 +48,7 @@ struct SettingsView: View {
 
         // Recognition section
         static let activeModel = "Select the speech recognition model to use"
-        static let autoDetectLanguage = "When enabled, Wispr automatically detects the spoken language"
+        static let autoDetectLanguage = "When enabled, Stop Typing automatically detects the spoken language"
         static let languagePicker = "Select the language for speech transcription"
         static let alwaysUseLanguage = "When enabled, always transcribes in the selected language instead of detecting per-recording"
 
@@ -62,7 +62,7 @@ struct SettingsView: View {
         static let showRecordingOverlay = "When enabled, a floating overlay appears while recording"
 
         // General section
-        static let launchAtLogin = "When enabled, Wispr starts automatically when you log in"
+        static let launchAtLogin = "When enabled, Stop Typing starts automatically when you log in"
         static let restoreDefaults = "Resets all settings to their original values"
     }
     @Environment(SettingsStore.self) private var settingsStore: SettingsStore
@@ -92,18 +92,22 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        Form {
-            shortcutSection
-            audioDeviceSection
-            recognitionSection
-            afterTranscriptionSection
-            feedbackSection
-            generalSection
+        VStack(spacing: 0) {
+            settingsBrandHeader
+            Form {
+                shortcutSection
+                audioDeviceSection
+                recognitionSection
+                afterTranscriptionSection
+                feedbackSection
+                generalSection
+            }
+            .formStyle(.grouped)
+            .scrollContentBackground(.hidden)
         }
-        .formStyle(.grouped)
         .frame(width: 520)
         .frame(maxHeight: 600)
-        .liquidGlassPanel()
+        .background(StopTypingBrand.swiftCanvas)
         .alert("Restore Defaults?", isPresented: $showRestoreDefaultsAlert) {
             Button("Restore", role: .destructive, action: restoreDefaults)
             Button("Cancel", role: .cancel) {}
@@ -138,6 +142,23 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Brand Header
+
+    private var settingsBrandHeader: some View {
+        HStack(spacing: 8) {
+            Text("Stop Typing")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(StopTypingBrand.swiftOnSurface)
+            Text("Settings")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(StopTypingBrand.swiftPrimary)
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 28)
+        .padding(.bottom, 6)
     }
 
     // MARK: - Shortcut Section
@@ -182,7 +203,7 @@ struct SettingsView: View {
             SectionHeader(
                 title: "Shortcut",
                 systemImage: SFSymbols.keyboard,
-                tint: .orange
+                tint: StopTypingBrand.swiftPrimary
             )
         }
         .motionRespectingAnimation(value: hotkeyError)
@@ -211,7 +232,7 @@ struct SettingsView: View {
             SectionHeader(
                 title: "Audio Device",
                 systemImage: theme.actionSymbol(.microphone),
-                tint: .blue
+                tint: StopTypingBrand.swiftPrimary
             )
         }
     }
@@ -286,7 +307,7 @@ struct SettingsView: View {
             SectionHeader(
                 title: "Recognition",
                 systemImage: theme.actionSymbol(.model),
-                tint: .purple
+                tint: StopTypingBrand.swiftPrimary
             )
         }
         .motionRespectingAnimation(value: settingsStore.languageMode.isAutoDetect)
@@ -315,7 +336,7 @@ struct SettingsView: View {
             SectionHeader(
                 title: "After Transcription",
                 systemImage: SFSymbols.textOutput,
-                tint: .teal
+                tint: StopTypingBrand.swiftPrimary
             )
         }
         .motionRespectingAnimation(value: settingsStore.autoSuffixEnabled)
@@ -335,7 +356,7 @@ struct SettingsView: View {
             SectionHeader(
                 title: "Feedback",
                 systemImage: SFSymbols.feedback,
-                tint: .mint
+                tint: StopTypingBrand.swiftPrimary
             )
         }
     }
@@ -380,7 +401,7 @@ struct SettingsView: View {
             SectionHeader(
                 title: "General",
                 systemImage: SFSymbols.settings,
-                tint: .secondary
+                tint: StopTypingBrand.swiftPrimary
             )
         }
     }

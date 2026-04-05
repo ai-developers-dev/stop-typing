@@ -278,7 +278,7 @@ final class WisprAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate 
 
         let hostingController = NSHostingController(rootView: onboardingView)
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "Wispr Setup"
+        window.title = "Stop Typing Setup"
         window.styleMask = [.titled, .closable]
         window.setContentSize(NSSize(width: 600, height: 500))
         window.center()

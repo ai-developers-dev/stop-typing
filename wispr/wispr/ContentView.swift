@@ -15,7 +15,7 @@ struct ContentView: View {
                 .foregroundStyle(.tint)
                 .accessibilityHidden(true)
 
-            Text("Wispr")
+            Text("Stop Typing")
                 .font(.largeTitle)
                 .fontWeight(.semibold)
 

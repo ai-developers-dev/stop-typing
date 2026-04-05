@@ -26,7 +26,7 @@ struct OnboardingAccessibilityStep: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(theme.primaryTextColor)
 
-            Text("Wispr needs accessibility access to insert transcribed text directly at your cursor position in any application. This permission must be granted in System Settings.")
+            Text("Stop Typing needs accessibility access to insert transcribed text directly at your cursor position in any application. This permission must be granted in System Settings.")
                 .font(.body)
                 .foregroundStyle(theme.secondaryTextColor)
                 .multilineTextAlignment(.center)
@@ -49,7 +49,7 @@ struct OnboardingAccessibilityStep: View {
                 .accessibilityLabel("Open System Settings")
                 .accessibilityHint("Opens System Settings to the Accessibility privacy pane")
 
-                Text("After enabling Wispr in System Settings, return here to continue.")
+                Text("After enabling Stop Typing in System Settings, return here to continue.")
                     .font(.callout)
                     .foregroundStyle(theme.secondaryTextColor)
                     .multilineTextAlignment(.center)

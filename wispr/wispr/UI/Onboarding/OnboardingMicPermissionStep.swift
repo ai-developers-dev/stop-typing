@@ -26,7 +26,7 @@ struct OnboardingMicPermissionStep: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(theme.primaryTextColor)
 
-            Text("Wispr uses your microphone to listen to your voice and transcribe it into text. Audio is processed entirely on your Mac and never sent anywhere.")
+            Text("Stop Typing uses your microphone to listen to your voice and transcribe it into text. Audio is processed entirely on your Mac and never sent anywhere.")
                 .font(.body)
                 .foregroundStyle(theme.secondaryTextColor)
                 .multilineTextAlignment(.center)
@@ -47,7 +47,7 @@ struct OnboardingMicPermissionStep: View {
                         .font(.headline)
                         .foregroundStyle(.red)
 
-                    Text("Wispr cannot work without microphone access. Please enable it in System Settings, then return here.")
+                    Text("Stop Typing cannot work without microphone access. Please enable it in System Settings, then return here.")
                         .font(.callout)
                         .foregroundStyle(theme.secondaryTextColor)
                         .multilineTextAlignment(.center)

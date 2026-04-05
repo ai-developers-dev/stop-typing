@@ -88,7 +88,7 @@ struct OnboardingFlow: View {
             settingsStore.onboardingLastStep = newStep.rawValue
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Wispr Setup")
+        .accessibilityLabel("Stop Typing Setup")
     }
 
     /// Direction-aware slide + fade transition for step changes.

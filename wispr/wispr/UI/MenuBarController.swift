@@ -166,7 +166,7 @@ final class MenuBarController {
         popover.behavior = .transient
         popover.appearance = NSAppearance(named: .darkAqua)
         popover.animates = !themeEngine.reduceMotion
-        popover.contentSize = NSSize(width: 280, height: 10)
+        popover.contentSize = NSSize(width: 340, height: 10)
         rebuildPopoverContent()
     }
 
@@ -394,7 +394,10 @@ final class MenuBarController {
         let hostingController = NSHostingController(rootView: settingsView)
         let window = NSWindow(contentViewController: hostingController)
         window.title = "Stop Typing Settings"
-        window.styleMask = [.titled, .closable, .miniaturizable]
+        window.styleMask = [.titled, .closable, .miniaturizable, .fullSizeContentView]
+        window.titlebarAppearsTransparent = true
+        window.appearance = NSAppearance(named: .darkAqua)
+        window.backgroundColor = StopTypingBrand.canvas
         window.setContentSize(NSSize(width: 560, height: 580))
         window.center()
         window.makeKeyAndOrderFront(nil)
@@ -422,8 +425,11 @@ final class MenuBarController {
 
         let hostingController = NSHostingController(rootView: modelView)
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "Model Management"
-        window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+        window.title = "Stop Typing — Model Management"
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
+        window.titlebarAppearsTransparent = true
+        window.appearance = NSAppearance(named: .darkAqua)
+        window.backgroundColor = StopTypingBrand.canvas
         window.setContentSize(NSSize(width: 620, height: 640))
         window.center()
         window.makeKeyAndOrderFront(nil)
@@ -473,8 +479,11 @@ final class MenuBarController {
         cliInstallWindow = nil
 
         let window = NSWindow()
-        window.title = "Install Command Line Tool"
-        window.styleMask = [.titled, .closable]
+        window.title = "Stop Typing — CLI Tool"
+        window.styleMask = [.titled, .closable, .fullSizeContentView]
+        window.titlebarAppearsTransparent = true
+        window.appearance = NSAppearance(named: .darkAqua)
+        window.backgroundColor = StopTypingBrand.canvas
         window.isReleasedWhenClosed = false
 
         let dialogView = CLIInstallDialogView(

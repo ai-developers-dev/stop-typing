@@ -27,17 +27,19 @@ struct CLIInstallDialogView: View {
         VStack(alignment: .leading, spacing: 16) {
             Label("Install Command Line Tool", systemImage: SFSymbols.terminal)
                 .font(.headline)
+                .foregroundStyle(StopTypingBrand.swiftPrimary)
 
-            Text("Run this command in Terminal to make **wispr** available from any shell session:")
-                .foregroundStyle(.secondary)
+            Text("Run this command in Terminal to make **stop-typing** available from any shell session:")
+                .foregroundStyle(StopTypingBrand.swiftOnSurfaceVariant)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 Text(installCommand)
                     .font(.system(.body, design: .monospaced))
+                    .foregroundStyle(StopTypingBrand.swiftOnSurface)
                     .textSelection(.enabled)
                     .padding(10)
             }
-            .background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
+            .background(StopTypingBrand.swiftSurfaceContainer, in: RoundedRectangle(cornerRadius: 6))
 
             HStack {
                 Button {
@@ -61,5 +63,6 @@ struct CLIInstallDialogView: View {
         }
         .padding(20)
         .frame(width: 440)
+        .background(StopTypingBrand.swiftCanvas)
     }
 }

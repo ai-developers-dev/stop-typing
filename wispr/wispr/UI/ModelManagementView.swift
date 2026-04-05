@@ -137,8 +137,9 @@ struct ModelManagementView: View {
         }
         .animation(theme.reduceMotion ? nil : .easeInOut(duration: 0.35), value: highlightedModelId)
         .frame(minWidth: 560, idealWidth: 620)
-        .liquidGlassPanel()
-        .navigationTitle("Model Management")
+        .scrollContentBackground(.hidden)
+        .background(StopTypingBrand.swiftCanvas)
+        .navigationTitle("Stop Typing — Models")
         .task {
             await refreshModels()
         }
@@ -159,7 +160,7 @@ struct ModelManagementView: View {
         .alert("No Models Available", isPresented: $showNoModelsAlert) {
             Button("OK") {}
         } message: {
-            Text("All models have been removed. Please download a model to continue using Wispr.")
+            Text("All models have been removed. Please download a model to continue using Stop Typing.")
         }
         .alert("Error", isPresented: .init(
             get: { errorMessage != nil },

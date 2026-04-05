@@ -34,12 +34,12 @@ struct OnboardingIconBadge: View {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [color, color.opacity(0.6)],
+                            colors: [StopTypingBrand.swiftPrimary, StopTypingBrand.swiftPrimaryContainer.opacity(0.6)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
-                    .shadow(color: color.opacity(0.25), radius: 16, y: 6)
+                    .shadow(color: StopTypingBrand.swiftPrimary.opacity(0.25), radius: 16, y: 6)
             )
             .accessibilityHidden(true)
     }
