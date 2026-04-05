@@ -39,6 +39,9 @@ final class MenuBarController {
     /// The dropdown menu displayed when the user clicks the status item.
     private let menu: NSMenu
 
+    /// Exposed for unit tests (`wisprTests`).
+    var menuForTesting: NSMenu { menu }
+
     /// Reference to the central state manager for wiring actions.
     private let stateManager: StateManager
 
@@ -131,6 +134,7 @@ final class MenuBarController {
         configureStatusButton()
         buildMenu()
         menu.delegate = menuDelegate
+        refreshMenuBranding()
         startObservingState()
     }
 
@@ -165,6 +169,146 @@ final class MenuBarController {
         )
     }
 
+    // MARK: - Menu branding (Stop Typing / Stitch palette)
+
+    /// Syncs menu appearance, typography, tinted SF Symbols, and optional attributed titles.
+    ///
+    /// Call when the menu opens and when observed settings/state change so Increase Contrast and related settings stay correct.
+    /// Manual checks: light vs dark *menu bar* (menu panel stays dark), Reduce Transparency, VoiceOver (Phase 1 a11y pass).
+    func refreshMenuBranding() {
+        syncMenuChrome()
+        syncMenuItemPaletteImages()
+        applyLanguageSubmenuAttributedTitles()
+        refreshUpdateMenuItemPresentation()
+        updateRecordingMenuItem()
+    }
+
+    private func syncMenuChrome() {
+        // Always use dark menu chrome for this status-item menu. Matching `isDarkMode` with `.aqua`
+        // produced a light frosted panel while row text/icons use bright Stitch teals — very low contrast
+        // on light wallpapers; `.darkAqua` keeps accents legible regardless of system appearance.
+        let darkMenuAppearance = NSAppearance(named: .darkAqua)
+        menu.appearance = darkMenuAppearance
+        languageSubmenu.appearance = darkMenuAppearance
+        let bodyFont = NSFont.systemFont(ofSize: 13, weight: .medium)
+        menu.font = bodyFont
+        languageSubmenu.font = bodyFont
+    }
+
+    /// SF Symbol for a menu row: brand palette, or template when Increase Contrast is enabled.
+    private func menuPaletteImage(
+        symbolName: String,
+        accessibilityDescription: String,
+        tint: NSColor
+    ) -> NSImage? {
+        guard let base = NSImage(
+            systemSymbolName: symbolName,
+            accessibilityDescription: accessibilityDescription
+        ) else { return nil }
+
+        if themeEngine.increaseContrast {
+            base.isTemplate = true
+            return base
+        }
+
+        let config = NSImage.SymbolConfiguration(paletteColors: [tint])
+        guard let configured = base.withSymbolConfiguration(config) else {
+            base.isTemplate = true
+            return base
+        }
+        configured.isTemplate = false
+        return configured
+    }
+
+    private func menuBodyAttributes(accent: NSColor) -> [NSAttributedString.Key: Any] {
+        let font = menu.font ?? NSFont.menuFont(ofSize: NSFont.systemFontSize)
+        if themeEngine.increaseContrast {
+            return [.font: font]
+        }
+        return [
+            .font: font,
+            .foregroundColor: accent,
+        ]
+    }
+
+    private func setPlainMenuTitle(_ item: NSMenuItem, plain: String, accent: NSColor) {
+        item.title = plain
+        if themeEngine.increaseContrast {
+            item.attributedTitle = nil
+        } else {
+            item.attributedTitle = NSAttributedString(string: plain, attributes: menuBodyAttributes(accent: accent))
+        }
+    }
+
+    private func syncMenuItemPaletteImages() {
+        languageMenuItem.image = menuPaletteImage(
+            symbolName: themeEngine.actionSymbol(.language),
+            accessibilityDescription: "Language",
+            tint: StopTypingBrand.primary
+        )
+        setPlainMenuTitle(languageMenuItem, plain: languageDisplayTitle(), accent: StopTypingBrand.primary)
+
+        for item in menu.items {
+            guard let action = item.action else { continue }
+            if action == #selector(MenuBarActionHandler.toggleRecording(_:)) {
+                continue
+            }
+            if action == #selector(MenuBarActionHandler.openSettings(_:)) {
+                item.image = menuPaletteImage(
+                    symbolName: themeEngine.actionSymbol(.settings),
+                    accessibilityDescription: "Settings",
+                    tint: StopTypingBrand.primary
+                )
+                setPlainMenuTitle(item, plain: item.title, accent: StopTypingBrand.primary)
+            } else if action == #selector(MenuBarActionHandler.openModelManagement(_:)) {
+                item.image = menuPaletteImage(
+                    symbolName: themeEngine.actionSymbol(.model),
+                    accessibilityDescription: "Model Management",
+                    tint: StopTypingBrand.primary
+                )
+                setPlainMenuTitle(item, plain: item.title, accent: StopTypingBrand.primary)
+            } else if action == #selector(MenuBarActionHandler.openUpdateDownload(_:)) {
+                item.image = menuPaletteImage(
+                    symbolName: SFSymbols.download,
+                    accessibilityDescription: "Update Available",
+                    tint: StopTypingBrand.primaryContainer
+                )
+            } else if action == #selector(MenuBarActionHandler.showCLIInstallDialog(_:)) {
+                item.image = menuPaletteImage(
+                    symbolName: SFSymbols.terminal,
+                    accessibilityDescription: "Install CLI",
+                    tint: StopTypingBrand.primary
+                )
+                setPlainMenuTitle(item, plain: item.title, accent: StopTypingBrand.primary)
+            } else if action == #selector(MenuBarActionHandler.quitApp(_:)) {
+                item.image = menuPaletteImage(
+                    symbolName: themeEngine.actionSymbol(.quit),
+                    accessibilityDescription: "Quit",
+                    tint: StopTypingBrand.secondary
+                )
+                setPlainMenuTitle(item, plain: item.title, accent: StopTypingBrand.secondary)
+            }
+        }
+    }
+
+    private func applyLanguageSubmenuAttributedTitles() {
+        for item in languageSubmenu.items where !item.isSeparatorItem {
+            setPlainMenuTitle(item, plain: item.title, accent: StopTypingBrand.primary)
+        }
+    }
+
+    private func refreshUpdateMenuItemPresentation() {
+        guard !updateMenuItem.isHidden else { return }
+        let plain = updateMenuItem.title
+        guard !plain.isEmpty else { return }
+        setPlainMenuTitle(updateMenuItem, plain: plain, accent: StopTypingBrand.primaryContainer)
+        updateMenuItem.image = menuPaletteImage(
+            symbolName: SFSymbols.download,
+            accessibilityDescription: "Update Available",
+            tint: StopTypingBrand.primaryContainer
+        )
+    }
+
     // MARK: - Menu Construction
 
     /// Builds the dropdown menu with all required items.
@@ -182,10 +326,6 @@ final class MenuBarController {
 
         // Language Selection
         languageMenuItem.title = languageDisplayTitle()
-        languageMenuItem.image = NSImage(
-            systemSymbolName: themeEngine.actionSymbol(.language),
-            accessibilityDescription: "Language"
-        )
         languageMenuItem.submenu = languageSubmenu
         buildLanguageSubmenu()
         menu.addItem(languageMenuItem)
@@ -198,10 +338,6 @@ final class MenuBarController {
             action: #selector(MenuBarActionHandler.openSettings(_:)),
             keyEquivalent: ","
         )
-        settingsItem.image = NSImage(
-            systemSymbolName: themeEngine.actionSymbol(.settings),
-            accessibilityDescription: "Settings"
-        )
         menu.addItem(settingsItem)
 
         // Model Management
@@ -210,20 +346,12 @@ final class MenuBarController {
             action: #selector(MenuBarActionHandler.openModelManagement(_:)),
             keyEquivalent: ""
         )
-        modelItem.image = NSImage(
-            systemSymbolName: themeEngine.actionSymbol(.model),
-            accessibilityDescription: "Model Management"
-        )
         menu.addItem(modelItem)
 
         // Update Available (shown dynamically)
         updateMenuItem.title = ""
         updateMenuItem.action = #selector(MenuBarActionHandler.openUpdateDownload(_:))
         updateMenuItem.target = MenuBarActionHandler.shared
-        updateMenuItem.image = NSImage(
-            systemSymbolName: SFSymbols.download,
-            accessibilityDescription: "Update Available"
-        )
         updateMenuItem.isHidden = true
         updateSeparator.isHidden = true
         menu.addItem(updateSeparator)
@@ -238,10 +366,6 @@ final class MenuBarController {
             action: #selector(MenuBarActionHandler.showCLIInstallDialog(_:)),
             keyEquivalent: ""
         )
-        installCLIItem.image = NSImage(
-            systemSymbolName: SFSymbols.terminal,
-            accessibilityDescription: "Install CLI"
-        )
         menu.addItem(installCLIItem)
         cliInstallMenuItem = installCLIItem
         refreshCLIInstallMenuItem()
@@ -253,10 +377,6 @@ final class MenuBarController {
             title: "Quit Stop Typing",
             action: #selector(MenuBarActionHandler.quitApp(_:)),
             keyEquivalent: "q"
-        )
-        quitItem.image = NSImage(
-            systemSymbolName: themeEngine.actionSymbol(.quit),
-            accessibilityDescription: "Quit"
         )
         menu.addItem(quitItem)
 
@@ -278,17 +398,25 @@ final class MenuBarController {
             modifiers: settingsStore.hotkeyModifiers
         )
         let label = isRecording ? "Stop Recording" : "Start Recording"
-        recordingMenuItem.title = "\(label)\t\(shortcut)"
+        let plain = "\(label)\t\(shortcut)"
+        recordingMenuItem.title = plain
         recordingMenuItem.action = #selector(MenuBarActionHandler.toggleRecording(_:))
         recordingMenuItem.target = MenuBarActionHandler.shared
 
         let symbolName = isRecording
             ? themeEngine.menuBarSymbol(for: .recording)
             : themeEngine.menuBarSymbol(for: .idle)
-        recordingMenuItem.image = NSImage(
-            systemSymbolName: symbolName,
-            accessibilityDescription: isRecording ? "Stop Recording" : "Start Recording"
+        let tint = isRecording ? StopTypingBrand.secondary : StopTypingBrand.primary
+        recordingMenuItem.image = menuPaletteImage(
+            symbolName: symbolName,
+            accessibilityDescription: isRecording ? "Stop Recording" : "Start Recording",
+            tint: tint
         )
+        if themeEngine.increaseContrast {
+            recordingMenuItem.attributedTitle = nil
+        } else {
+            recordingMenuItem.attributedTitle = NSAttributedString(string: plain, attributes: menuBodyAttributes(accent: tint))
+        }
 
         // Disable during processing
         recordingMenuItem.isEnabled = stateManager.appState != .processing
@@ -470,10 +598,10 @@ final class MenuBarController {
                 _ = self.settingsStore.languageMode
 
                 self.updateIcon(for: currentState)
-                self.updateRecordingMenuItem()
                 self.refreshUpdateMenuItem()
                 self.languageMenuItem.title = self.languageDisplayTitle()
                 self.buildLanguageSubmenu()
+                self.refreshMenuBranding()
 
                 // Wait for the next change using Observation framework
                 await withCheckedContinuation { continuation in
@@ -483,6 +611,8 @@ final class MenuBarController {
                         _ = self.settingsStore.hotkeyKeyCode
                         _ = self.settingsStore.hotkeyModifiers
                         _ = self.updateChecker.availableUpdate
+                        _ = self.themeEngine.isDarkMode
+                        _ = self.themeEngine.increaseContrast
                     } onChange: {
                         continuation.resume()
                     }
@@ -662,6 +792,7 @@ final class MenuOpenDelegate: NSObject, NSMenuDelegate {
 
     func menuWillOpen(_ menu: NSMenu) {
         controller?.refreshCLIInstallMenuItem()
+        controller?.refreshMenuBranding()
     }
 }
 

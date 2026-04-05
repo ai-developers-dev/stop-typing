@@ -320,3 +320,31 @@ struct StopTypingMenuBarMarkTests {
         #expect(img.isTemplate == true)
     }
 }
+
+// MARK: - Menu branding
+
+@MainActor
+@Suite("MenuBarController Menu Branding Tests")
+struct MenuBarControllerMenuBrandingTests {
+
+    @Test("refreshMenuBranding completes without throwing")
+    func testRefreshMenuBrandingRuns() {
+        let (controller, _, _, _) = createTestController()
+        controller.refreshMenuBranding()
+        controller.stopObserving()
+    }
+
+    @Test("refreshMenuBranding with Increase Contrast uses template images on palette rows")
+    func testRefreshMenuBrandingIncreaseContrastTemplates() {
+        let (controller, _, _, themeEngine) = createTestController()
+        themeEngine.increaseContrast = true
+        controller.refreshMenuBranding()
+
+        let menu = controller.menuForTesting
+        for item in menu.items {
+            guard let image = item.image else { continue }
+            #expect(image.isTemplate == true, "Row images should be template when Increase Contrast is on")
+        }
+        controller.stopObserving()
+    }
+}

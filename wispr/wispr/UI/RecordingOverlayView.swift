@@ -117,17 +117,20 @@ struct RecordingOverlayView: View {
         }
     }
 
+    /// Brand color for the recording state microphone and glow.
+    private let recordingColor = Color(nsColor: StopTypingBrand.secondary)
+
     /// Recording state: microphone icon + animated audio level bars.
     private var recordingContent: some View {
         HStack(spacing: 10) {
             Image(systemName: SFSymbols.recordingMicrophone)
                 .font(.title)
-                .foregroundStyle(theme.accentColor)
+                .foregroundStyle(recordingColor)
                 .symbolEffect(.pulse, isActive: !theme.reduceMotion)
                 .shadow(
                     color: theme.reduceMotion
                         ? .clear
-                        : theme.accentColor.opacity(isGlowActive ? 0.6 : 0.0),
+                        : recordingColor.opacity(isGlowActive ? 0.6 : 0.0),
                     radius: isGlowActive ? 8 : 0
                 )
                 .accessibilityHidden(true)
@@ -186,13 +189,13 @@ struct RecordingOverlayView: View {
         .accessibilityHidden(true)
     }
 
-    /// Maps a 0…1 audio level to a color: green → yellow → red.
+    /// Maps a 0…1 audio level to a color using brand palette: cyan → bright cyan → orange.
     private func barColor(for level: Float) -> Color {
         let clamped = Double(min(max(level, 0), 1))
         if clamped < 0.5 {
-            return theme.accentColor.opacity(0.5 + clamped)
+            return Color(nsColor: StopTypingBrand.primary).opacity(0.5 + clamped)
         } else if clamped < 0.8 {
-            return .yellow.opacity(0.6 + clamped * 0.4)
+            return recordingColor.opacity(0.6 + clamped * 0.4)
         } else {
             return .orange.opacity(0.7 + clamped * 0.3)
         }
