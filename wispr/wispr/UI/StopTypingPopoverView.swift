@@ -2,9 +2,9 @@
 //  StopTypingPopoverView.swift
 //  wispr
 //
-//  Phase 3 popover panel with full Obsidian Flux branding:
-//  prominent "Stop Typing" header, larger rows, teal accents,
-//  recording glow, and version footer.
+//  Bold popover panel with Obsidian Flux branding:
+//  centered header, full-width CTA, card-grouped rows,
+//  generous spacing inspired by modern panel UIs.
 //
 
 import SwiftUI
@@ -42,68 +42,50 @@ struct StopTypingPopoverView: View {
         VStack(spacing: 0) {
             brandHeader
             gradientRule
-            recordingRow
-            divider
-            languageSection
-            divider
-            settingsRow
-            modelManagementRow
-
-            if let update = availableUpdate {
-                divider
-                updateRow(update)
-            }
-
-            if !isCLIInstalled {
-                divider
-                cliInstallRow
-            }
-
-            divider
-            quitRow
+            recordingCTA
+            cardSpacer
+            languageCard
+            cardSpacer
+            settingsCard
+            conditionalCards
+            quitSection
             versionFooter
         }
-        .padding(.vertical, 8)
-        .frame(width: 340)
+        .padding(20)
+        .frame(width: 400)
         .background(StopTypingBrand.swiftCanvas)
     }
 
-    // MARK: - Brand Header
+    // MARK: - Brand Header (centered, bold)
 
     private var brandHeader: some View {
-        HStack(spacing: 10) {
+        VStack(spacing: 6) {
             Text("ST")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundStyle(
-                    hc ? .primary : StopTypingBrand.swiftOnSurface
-                )
-                .frame(width: 34, height: 34)
+                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .foregroundStyle(hc ? .primary : StopTypingBrand.swiftOnSurface)
+                .frame(width: 48, height: 48)
                 .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(StopTypingBrand.swiftSurfaceContainer)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .strokeBorder(
-                                    hc ? .primary.opacity(0.5) : StopTypingBrand.swiftPrimary.opacity(0.4),
+                                    hc ? .primary.opacity(0.5) : StopTypingBrand.swiftPrimary.opacity(0.35),
                                     lineWidth: 1
                                 )
                         )
                 )
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text("Stop Typing")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(hc ? .primary : StopTypingBrand.swiftOnSurface)
-                Text("Voice Dictation")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(hc ? .secondary : StopTypingBrand.swiftPrimary)
-            }
+            Text("Stop Typing")
+                .font(.system(size: 24, weight: .bold))
+                .foregroundStyle(hc ? .primary : StopTypingBrand.swiftOnSurface)
 
-            Spacer()
+            Text("Voice Dictation")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(hc ? .secondary : StopTypingBrand.swiftPrimary)
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 6)
-        .padding(.bottom, 10)
+        .frame(maxWidth: .infinity)
+        .padding(.bottom, 16)
     }
 
     private var gradientRule: some View {
@@ -115,13 +97,12 @@ struct StopTypingPopoverView: View {
             endPoint: .trailing
         )
         .frame(height: 2)
-        .padding(.horizontal, 16)
-        .padding(.bottom, 6)
+        .padding(.bottom, 16)
     }
 
-    // MARK: - Rows
+    // MARK: - Recording CTA Button
 
-    private var recordingRow: some View {
+    private var recordingCTA: some View {
         let isRecording = appState == .recording
         let title = isRecording ? "Stop Recording" : "Start Recording"
         let symbol = isRecording ? SFSymbols.menuBarRecording : SFSymbols.menuBarIdle
@@ -129,107 +110,181 @@ struct StopTypingPopoverView: View {
             ? (hc ? .primary : StopTypingBrand.swiftSecondary)
             : (hc ? .primary : StopTypingBrand.swiftPrimary)
 
-        return PopoverMenuRow(
-            symbol: symbol,
-            title: title,
-            trailing: hotkeyDisplayString,
-            accent: accent,
-            textColor: accent,
-            isDisabled: appState == .processing,
-            isRecording: isRecording,
-            reduceMotion: themeEngine.reduceMotion
-        ) {
+        return Button {
             actions.toggleRecording()
             actions.dismiss()
+        } label: {
+            HStack(spacing: 12) {
+                RecordingIconView(
+                    symbol: symbol,
+                    accent: accent,
+                    isRecording: isRecording,
+                    reduceMotion: themeEngine.reduceMotion
+                )
+
+                Text(title)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(accent)
+
+                Spacer()
+
+                Text(hotkeyDisplayString)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(accent.opacity(0.6))
+            }
+            .padding(.horizontal, 20)
+            .frame(height: 50)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(
+                        isRecording
+                            ? (hc ? Color.primary.opacity(0.08) : StopTypingBrand.swiftSecondary.opacity(0.12))
+                            : StopTypingBrand.swiftSurfaceContainer
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(accent.opacity(0.2), lineWidth: 1)
+                    )
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 16))
+        }
+        .buttonStyle(.plain)
+        .disabled(appState == .processing)
+        .opacity(appState == .processing ? 0.35 : 1)
+        .accessibilityLabel("\(title), \(hotkeyDisplayString)")
+        .accessibilityAddTraits(.isButton)
+    }
+
+    // MARK: - Card Groups
+
+    private var languageCard: some View {
+        CardGroup {
+            VStack(spacing: 0) {
+                CardRow(
+                    symbol: SFSymbols.language,
+                    title: languageDisplayTitle,
+                    accent: hc ? .primary : StopTypingBrand.swiftPrimary,
+                    textColor: hc ? .primary : StopTypingBrand.swiftOnSurface,
+                    chevron: isLanguageExpanded ? .up : .down
+                ) {
+                    isLanguageExpanded.toggle()
+                }
+
+                if isLanguageExpanded {
+                    cardDivider
+                    languageList
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+            }
+            .animation(themeEngine.reduceMotion ? nil : .easeOut(duration: 0.15), value: isLanguageExpanded)
         }
     }
 
-    private var settingsRow: some View {
-        PopoverMenuRow(
-            symbol: SFSymbols.settings,
-            title: "Settings\u{2026}",
-            trailing: "\u{2318},",
-            accent: hc ? .primary : StopTypingBrand.swiftPrimary,
-            textColor: hc ? .primary : StopTypingBrand.swiftOnSurface
-        ) {
-            actions.openSettings()
-            actions.dismiss()
-        }
-    }
+    private var settingsCard: some View {
+        CardGroup {
+            VStack(spacing: 0) {
+                CardRow(
+                    symbol: SFSymbols.settings,
+                    title: "Settings\u{2026}",
+                    trailing: "\u{2318},",
+                    accent: hc ? .primary : StopTypingBrand.swiftPrimary,
+                    textColor: hc ? .primary : StopTypingBrand.swiftOnSurface
+                ) {
+                    actions.openSettings()
+                    actions.dismiss()
+                }
 
-    private var modelManagementRow: some View {
-        PopoverMenuRow(
-            symbol: SFSymbols.model,
-            title: "Model Management\u{2026}",
-            accent: hc ? .primary : StopTypingBrand.swiftPrimary,
-            textColor: hc ? .primary : StopTypingBrand.swiftOnSurface
-        ) {
-            actions.openModelManagement()
-            actions.dismiss()
-        }
-    }
+                cardDivider
 
-    private func updateRow(_ update: AppUpdateInfo) -> some View {
-        PopoverMenuRow(
-            symbol: SFSymbols.download,
-            title: "Update Available: \(update.version)",
-            accent: hc ? .primary : StopTypingBrand.swiftPrimaryContainer,
-            textColor: hc ? .primary : StopTypingBrand.swiftOnSurface
-        ) {
-            actions.openUpdateDownload()
-            actions.dismiss()
-        }
-    }
-
-    private var cliInstallRow: some View {
-        PopoverMenuRow(
-            symbol: SFSymbols.terminal,
-            title: "Install Command Line Tool\u{2026}",
-            accent: hc ? .primary : StopTypingBrand.swiftPrimary,
-            textColor: hc ? .primary : StopTypingBrand.swiftOnSurface
-        ) {
-            actions.showCLIInstallDialog()
-            actions.dismiss()
-        }
-    }
-
-    private var quitRow: some View {
-        PopoverMenuRow(
-            symbol: SFSymbols.quit,
-            title: "Quit Stop Typing",
-            trailing: "\u{2318}Q",
-            accent: hc ? .secondary : StopTypingBrand.swiftSecondary,
-            textColor: hc ? .secondary : StopTypingBrand.swiftSecondary
-        ) {
-            actions.quitApp()
-        }
-    }
-
-    // MARK: - Language Section
-
-    private var languageSection: some View {
-        VStack(spacing: 0) {
-            languageHeaderRow
-            if isLanguageExpanded {
-                languageList
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                CardRow(
+                    symbol: SFSymbols.model,
+                    title: "Model Management\u{2026}",
+                    accent: hc ? .primary : StopTypingBrand.swiftPrimary,
+                    textColor: hc ? .primary : StopTypingBrand.swiftOnSurface
+                ) {
+                    actions.openModelManagement()
+                    actions.dismiss()
+                }
             }
         }
-        .animation(themeEngine.reduceMotion ? nil : .easeOut(duration: 0.15), value: isLanguageExpanded)
     }
 
-    private var languageHeaderRow: some View {
-        PopoverMenuRow(
-            symbol: SFSymbols.language,
-            title: languageDisplayTitle,
-            trailing: nil,
-            accent: hc ? .primary : StopTypingBrand.swiftPrimary,
-            textColor: hc ? .primary : StopTypingBrand.swiftOnSurface,
-            chevron: isLanguageExpanded ? .up : .down
-        ) {
-            isLanguageExpanded.toggle()
+    @ViewBuilder
+    private var conditionalCards: some View {
+        if let update = availableUpdate {
+            cardSpacer
+            CardGroup {
+                CardRow(
+                    symbol: SFSymbols.download,
+                    title: "Update Available: \(update.version)",
+                    accent: hc ? .primary : StopTypingBrand.swiftPrimaryContainer,
+                    textColor: hc ? .primary : StopTypingBrand.swiftOnSurface
+                ) {
+                    actions.openUpdateDownload()
+                    actions.dismiss()
+                }
+            }
+        }
+
+        if !isCLIInstalled {
+            cardSpacer
+            CardGroup {
+                CardRow(
+                    symbol: SFSymbols.terminal,
+                    title: "Install Command Line Tool\u{2026}",
+                    accent: hc ? .primary : StopTypingBrand.swiftPrimary,
+                    textColor: hc ? .primary : StopTypingBrand.swiftOnSurface
+                ) {
+                    actions.showCLIInstallDialog()
+                    actions.dismiss()
+                }
+            }
         }
     }
+
+    // MARK: - Quit & Footer
+
+    private var quitSection: some View {
+        Button {
+            actions.quitApp()
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: SFSymbols.quit)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(StopTypingBrand.swiftOnSurfaceVariant)
+
+                Text("Quit Stop Typing")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(StopTypingBrand.swiftOnSurfaceVariant)
+
+                Spacer()
+
+                Text("\u{2318}Q")
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundStyle(StopTypingBrand.swiftOnSurfaceVariant.opacity(0.6))
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 40)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.top, 16)
+        .accessibilityLabel("Quit Stop Typing, Command Q")
+        .accessibilityAddTraits(.isButton)
+    }
+
+    private var versionFooter: some View {
+        Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")")
+            .font(.system(size: 11, weight: .regular))
+            .foregroundStyle(
+                hc ? .secondary.opacity(0.5) : StopTypingBrand.swiftPrimary.opacity(0.35)
+            )
+            .frame(maxWidth: .infinity)
+            .padding(.top, 12)
+    }
+
+    // MARK: - Language List
 
     private var languageDisplayTitle: String {
         switch languageMode {
@@ -260,11 +315,12 @@ struct StopTypingPopoverView: View {
                 }
             }
         }
-        .padding(.leading, 30)
+        .padding(.leading, 24)
+        .padding(.vertical, 4)
     }
 
     private func languageItem(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
-        PopoverMenuRow(
+        CardRow(
             symbol: isSelected ? SFSymbols.checkmarkPlain : nil,
             title: title,
             accent: hc ? .primary : StopTypingBrand.swiftPrimary,
@@ -275,47 +331,44 @@ struct StopTypingPopoverView: View {
         }
     }
 
-    // MARK: - Divider & Footer
+    // MARK: - Helpers
 
-    private var divider: some View {
-        Rectangle()
-            .fill(
-                hc
-                    ? .primary.opacity(0.15)
-                    : StopTypingBrand.swiftPrimary.opacity(0.10)
-            )
-            .frame(height: 1)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 6)
+    private var cardSpacer: some View {
+        Spacer().frame(height: 12)
     }
 
-    private var versionFooter: some View {
-        HStack {
-            Spacer()
-            Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")")
-                .font(.system(size: 10, weight: .regular))
-                .foregroundStyle(
-                    hc ? .secondary.opacity(0.5) : StopTypingBrand.swiftPrimary.opacity(0.35)
-                )
-            Spacer()
-        }
-        .padding(.top, 2)
-        .padding(.bottom, 2)
+    private var cardDivider: some View {
+        Rectangle()
+            .fill(StopTypingBrand.swiftSurfaceContainerHigh.opacity(0.5))
+            .frame(height: 1)
+            .padding(.horizontal, 12)
     }
 }
 
-// MARK: - PopoverMenuRow
+// MARK: - CardGroup
 
-/// A single interactive row in the popover menu.
-private struct PopoverMenuRow: View {
+/// A rounded dark container that groups related rows.
+private struct CardGroup<Content: View>: View {
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        content()
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(StopTypingBrand.swiftSurfaceContainerLow)
+            )
+    }
+}
+
+// MARK: - CardRow
+
+/// A single interactive row inside a card group.
+private struct CardRow: View {
     let symbol: String?
     let title: String
     var trailing: String? = nil
     let accent: Color
     var textColor: Color
-    var isDisabled: Bool = false
-    var isRecording: Bool = false
-    var reduceMotion: Bool = false
     var chevron: ChevronDirection? = nil
     var compact: Bool = false
     let action: () -> Void
@@ -325,33 +378,21 @@ private struct PopoverMenuRow: View {
     }
 
     @State private var isHovered = false
-    @State private var glowPulse = false
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 10) {
+            HStack(spacing: 12) {
                 if let symbol {
-                    ZStack {
-                        if isRecording && !reduceMotion {
-                            Circle()
-                                .fill(accent.opacity(glowPulse ? 0.25 : 0.08))
-                                .frame(width: 28, height: 28)
-                                .animation(
-                                    .easeInOut(duration: 0.8).repeatForever(autoreverses: true),
-                                    value: glowPulse
-                                )
-                        }
-                        Image(systemName: symbol)
-                            .font(.system(size: compact ? 12 : 15, weight: .medium))
-                            .foregroundStyle(accent)
-                    }
-                    .frame(width: 22, alignment: .center)
+                    Image(systemName: symbol)
+                        .font(.system(size: compact ? 13 : 18, weight: .medium))
+                        .foregroundStyle(accent)
+                        .frame(width: 24, alignment: .center)
                 } else if !compact {
-                    Spacer().frame(width: 22)
+                    Spacer().frame(width: 24)
                 }
 
                 Text(title)
-                    .font(.system(size: compact ? 12 : 14, weight: .medium))
+                    .font(.system(size: compact ? 13 : 15, weight: compact ? .medium : .semibold))
                     .foregroundStyle(textColor)
                     .lineLimit(1)
 
@@ -359,42 +400,66 @@ private struct PopoverMenuRow: View {
 
                 if let chevron {
                     Image(systemName: chevron == .up ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(accent.opacity(0.6))
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(accent.opacity(0.5))
                 }
 
                 if let trailing {
                     Text(trailing)
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundStyle(accent.opacity(0.7))
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundStyle(accent.opacity(0.6))
                 }
             }
-            .padding(.horizontal, 14)
-            .frame(height: isRecording ? 40 : (compact ? 26 : 34))
+            .padding(.horizontal, 16)
+            .frame(height: compact ? 32 : 44)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(
-                    isHovered
-                        ? accent.opacity(0.10)
-                        : Color.clear
-                )
-                .padding(.horizontal, 8)
+            isHovered
+                ? StopTypingBrand.swiftSurfaceContainerHigh.opacity(0.6)
+                : Color.clear
         )
         .onHover { hovering in
             isHovered = hovering
         }
+        .accessibilityLabel(trailing.map { "\(title), \($0)" } ?? title)
+        .accessibilityAddTraits(.isButton)
+    }
+}
+
+// MARK: - RecordingIconView
+
+/// Animated mic icon with pulsing glow ring for the CTA button.
+private struct RecordingIconView: View {
+    let symbol: String
+    let accent: Color
+    let isRecording: Bool
+    let reduceMotion: Bool
+
+    @State private var glowPulse = false
+
+    var body: some View {
+        ZStack {
+            if isRecording && !reduceMotion {
+                Circle()
+                    .fill(accent.opacity(glowPulse ? 0.3 : 0.08))
+                    .frame(width: 36, height: 36)
+                    .animation(
+                        .easeInOut(duration: 0.8).repeatForever(autoreverses: true),
+                        value: glowPulse
+                    )
+            }
+            Image(systemName: symbol)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(accent)
+        }
+        .frame(width: 28, alignment: .center)
         .onAppear {
             if isRecording { glowPulse = true }
         }
         .onChange(of: isRecording) { _, recording in
             glowPulse = recording
         }
-        .disabled(isDisabled)
-        .opacity(isDisabled ? 0.35 : 1)
-        .accessibilityLabel(trailing.map { "\(title), \($0)" } ?? title)
-        .accessibilityAddTraits(.isButton)
     }
 }

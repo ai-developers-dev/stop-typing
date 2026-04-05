@@ -1,0 +1,35 @@
+---
+description: Always consult Apple documentation via Sosumi MCP before writing Swift, SwiftUI, or AppKit code
+globs: "**/*.swift"
+alwaysApply: false
+---
+
+# Apple Documentation Lookup (Sosumi MCP)
+
+Before writing or modifying Swift code, use the `user-sosumi` MCP tools to verify APIs.
+
+## Workflow
+
+1. **Search first** if the exact doc path is unknown: `searchAppleDocumentation` with a query
+2. **Fetch the specific symbol page**: `fetchAppleDocumentation` with the path (e.g. `/documentation/swiftui/view`)
+3. **Prefer specific symbol pages** over broad framework overviews
+
+## Available MCP Tools
+
+- `searchAppleDocumentation` -- query: string -- search Apple docs
+- `fetchAppleDocumentation` -- path: string -- fetch a doc page as Markdown
+- `fetchAppleVideoTranscript` -- path: string -- fetch WWDC transcript
+- `fetchExternalDocumentation` -- url: string -- fetch external Swift-DocC
+
+## When to Look Up Docs
+
+- Using an API you're not 100% certain about (signatures, availability, parameters)
+- Adding new AppKit, SwiftUI, UIKit, or Foundation code
+- Checking Human Interface Guidelines for UI decisions
+- Do NOT fabricate API signatures -- always verify with a fetch when uncertain
+
+## Path Patterns
+
+- API Reference: `/documentation/{framework}/{symbol}`
+- HIG: `/design/human-interface-guidelines/{topic}`
+- WWDC: `/videos/play/{collection}/{id}`

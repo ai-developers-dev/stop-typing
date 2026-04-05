@@ -166,7 +166,7 @@ final class MenuBarController {
         popover.behavior = .transient
         popover.appearance = NSAppearance(named: .darkAqua)
         popover.animates = !themeEngine.reduceMotion
-        popover.contentSize = NSSize(width: 340, height: 10)
+        popover.contentSize = NSSize(width: 400, height: 10)
         rebuildPopoverContent()
     }
 
