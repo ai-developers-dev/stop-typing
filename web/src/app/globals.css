@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+:root {
+  --st-canvas: #0B0E11;
+  --st-surface-dim: #080A0D;
+  --st-surface-low: #111519;
+  --st-surface: #1A1F25;
+  --st-surface-high: #232930;
+  --st-primary: #69DAFF;
+  --st-primary-container: #00CFFC;
+  --st-secondary: #00F4FE;
+  --st-on-surface: #F8F9FE;
+  --st-on-surface-variant: #A0A8B4;
+}
+
+body {
+  font-family: var(--font-geist), system-ui, -apple-system, sans-serif;
+}

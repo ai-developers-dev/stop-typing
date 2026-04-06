@@ -139,6 +139,11 @@ final class WisprAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate 
         Log.app.debug("bootstrap — TextInsertionService created")
         Log.app.debug("bootstrap — HotkeyMonitor created")
 
+        // Smart post-processor for Pro tier LLM cleanup
+        let postProcessor = SmartPostProcessor(apiKeyProvider: {
+            KeychainHelper.load(key: KeychainHelper.groqAPIKey)
+        })
+
         // Build the StateManager with all injected dependencies
         let sm = StateManager(
             audioEngine: audioEngine,
@@ -146,7 +151,8 @@ final class WisprAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate 
             textInsertionService: textInsertionService,
             hotkeyMonitor: hotkeyMonitor,
             permissionManager: permissionManager,
-            settingsStore: settingsStore
+            settingsStore: settingsStore,
+            smartPostProcessor: postProcessor
         )
         stateManager = sm
 

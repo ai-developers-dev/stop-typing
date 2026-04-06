@@ -120,6 +120,12 @@ final class SettingsStore {
         didSet { guard !isLoading else { return }; defaults.set(cloudContextPrompt, forKey: Keys.cloudContextPrompt) }
     }
 
+    /// When true, transcriptions are post-processed by an LLM to fix punctuation,
+    /// apply self-corrections, and remove filler words. Pro tier only.
+    var smartPostProcessing: Bool {
+        didSet { guard !isLoading else { return }; defaults.set(smartPostProcessing, forKey: Keys.smartPostProcessing) }
+    }
+
     // MARK: - UserDefaults Keys
     private enum Keys {
         static let hotkeyKeyCode = "hotkeyKeyCode"
@@ -139,6 +145,7 @@ final class SettingsStore {
         static let autoSendEnterEnabled = "autoSendEnterEnabled"
         static let subscriptionTier = "subscriptionTier"
         static let cloudContextPrompt = "cloudContextPrompt"
+        static let smartPostProcessing = "smartPostProcessing"
     }
     
     // MARK: - Default Values
@@ -163,6 +170,7 @@ final class SettingsStore {
         static let autoSendEnterEnabled: Bool = false
         static let subscriptionTier: SubscriptionTier = .free
         static let cloudContextPrompt: String = GroqCloudService.defaultContextPrompt
+        static let smartPostProcessing: Bool = true
     }
 
     // MARK: - Dependencies
@@ -191,6 +199,7 @@ final class SettingsStore {
         self.autoSendEnterEnabled = Defaults.autoSendEnterEnabled
         self.subscriptionTier = Defaults.subscriptionTier
         self.cloudContextPrompt = Defaults.cloudContextPrompt
+        self.smartPostProcessing = Defaults.smartPostProcessing
 
         // Load persisted values
         load()
@@ -217,6 +226,7 @@ final class SettingsStore {
         autoSendEnterEnabled = Defaults.autoSendEnterEnabled
         subscriptionTier = Defaults.subscriptionTier
         cloudContextPrompt = Defaults.cloudContextPrompt
+        smartPostProcessing = Defaults.smartPostProcessing
     }
     
     // MARK: - Persistence
@@ -242,6 +252,7 @@ final class SettingsStore {
         defaults.set(autoSendEnterEnabled, forKey: Keys.autoSendEnterEnabled)
         defaults.set(subscriptionTier.rawValue, forKey: Keys.subscriptionTier)
         defaults.set(cloudContextPrompt, forKey: Keys.cloudContextPrompt)
+        defaults.set(smartPostProcessing, forKey: Keys.smartPostProcessing)
 
         if let encoded = try? JSONEncoder().encode(languageMode) {
             defaults.set(encoded, forKey: Keys.languageMode)
@@ -330,6 +341,11 @@ final class SettingsStore {
         // Load cloud context prompt
         if let prompt = defaults.string(forKey: Keys.cloudContextPrompt) {
             self.cloudContextPrompt = prompt
+        }
+
+        // Load smart post-processing
+        if defaults.object(forKey: Keys.smartPostProcessing) != nil {
+            self.smartPostProcessing = defaults.bool(forKey: Keys.smartPostProcessing)
         }
     }
     

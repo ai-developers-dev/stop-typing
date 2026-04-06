@@ -48,6 +48,7 @@ final class StateManager {
     private let permissionManager: PermissionManager
     private let settingsStore: SettingsStore
     private let soundFeedback: SoundFeedbackService
+    private let smartPostProcessor: SmartPostProcessor?
 
     /// Task for auto-dismissing error state after timeout.
     private var errorDismissTask: Task<Void, Never>?
@@ -75,13 +76,15 @@ final class StateManager {
         textInsertionService: any TextInserting,
         hotkeyMonitor: HotkeyMonitor,
         permissionManager: PermissionManager,
-        settingsStore: SettingsStore
+        settingsStore: SettingsStore,
+        smartPostProcessor: SmartPostProcessor? = nil
     ) {
         self.audioEngine = audioEngine
         self.whisperService = whisperService
         self.textInsertionService = textInsertionService
         self.hotkeyMonitor = hotkeyMonitor
         self.permissionManager = permissionManager
+        self.smartPostProcessor = smartPostProcessor
         self.settingsStore = settingsStore
         self.soundFeedback = SoundFeedbackService(settingsStore: settingsStore)
 
@@ -279,12 +282,17 @@ final class StateManager {
             return
         }
 
-        let cleaned = applyFillerWordRemoval(to: text)
+        var cleaned = applyFillerWordRemoval(to: text)
 
         // If filler removal left the text empty, treat as empty transcription
         guard !cleaned.isEmpty else {
             await resetToIdle()
             return
+        }
+
+        // Smart post-processing via LLM (Pro tier only)
+        if settingsStore.smartPostProcessing, let processor = smartPostProcessor {
+            cleaned = await processor.process(cleaned)
         }
 
         let finalText = applyAutoSuffix(to: cleaned)

@@ -55,13 +55,16 @@ actor GroqCloudService: TranscriptionEngine {
         self.contextPrompt = contextPrompt
     }
 
-    /// Default context prompt optimized for voice dictation.
-    /// Includes domain vocabulary the model might otherwise misspell.
+    /// Default context prompt optimized for voice dictation with proper punctuation.
+    /// Whisper treats the prompt as prior transcript context and mimics its style,
+    /// so including well-punctuated examples teaches the model to add commas, periods, etc.
     nonisolated static let defaultContextPrompt = """
-    Voice dictation for a macOS developer. Use proper capitalization and punctuation. \
-    Known terms: Stop Typing, SwiftUI, AppKit, UIKit, Xcode, WhisperKit, Parakeet, \
-    Groq, CoreML, async, await, actor, Sendable, Observable, UserDefaults, Keychain, \
-    GitHub, pull request, merge, commit.
+    Hello, this is a voice dictation session. I'll be speaking naturally, and I'd like \
+    proper punctuation including commas, periods, question marks, and exclamation points. \
+    Please capitalize the first word of each sentence. Here's an example of the style I want: \
+    "The quick brown fox jumps over the lazy dog. It was a beautiful day, wasn't it? \
+    I can't believe how fast that was!" Known terms: Stop Typing, SwiftUI, AppKit, Xcode, \
+    GitHub, Convex, Clerk, Stripe, JavaScript, TypeScript, React, Next.js, Tailwind.
     """
 
     // MARK: - Available Models
@@ -210,10 +213,11 @@ actor GroqCloudService: TranscriptionEngine {
     /// Maps our internal model IDs to the Groq API model parameter.
     private func groqModelName(for modelId: String?) -> String {
         switch modelId {
-        case ModelInfo.KnownID.groqWhisperV3:
-            return "whisper-large-v3"
-        default:
+        case ModelInfo.KnownID.groqWhisperTurbo:
             return "whisper-large-v3-turbo"
+        default:
+            // Default to highest accuracy model
+            return "whisper-large-v3"
         }
     }
 

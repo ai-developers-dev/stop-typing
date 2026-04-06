@@ -8,3 +8,8 @@ wispr/xcconfig-override.xcconfig
 
 # API keys (never commit)
 wispr/wispr/Secrets.plist
+
+# Web app
+web/node_modules/
+web/.env.local
+web/.next/
