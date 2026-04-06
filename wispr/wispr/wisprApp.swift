@@ -229,10 +229,10 @@ final class WisprAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate 
         onboardingWindow?.close()
         onboardingWindow = nil
 
-        // Model was already loaded during the onboarding download step
-        // (WhisperService.downloadModel loads the model and sets activeModelName).
-        // Just ensure we're in idle state.
-        stateManager?.markAsReady()
+        // Load the active model so dictation works immediately after onboarding.
+        // For free tier: downloads and loads Parakeet V3.
+        // For Pro tier: activates cloud model (no download needed).
+        Task { await stateManager?.loadActiveModel() }
     }
 
     // MARK: - NSWindowDelegate

@@ -26,7 +26,7 @@ struct OnboardingMicPermissionStep: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(theme.primaryTextColor)
 
-            Text("Stop Typing uses your microphone to listen to your voice and transcribe it into text. Audio is processed entirely on your Mac and never sent anywhere.")
+            Text("Stop Typing uses your microphone to listen to your voice and transcribe it into text. Audio is processed on your Mac with local models. Pro cloud models send audio securely for transcription — never stored after processing.")
                 .font(.body)
                 .foregroundStyle(theme.secondaryTextColor)
                 .multilineTextAlignment(.center)
