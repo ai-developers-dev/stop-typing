@@ -13,6 +13,7 @@
 		00C1100E2F60A00100000002 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = 00C110112F60A00100000002 /* FluidAudio */; };
 		00C1100F2F60A00100000003 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 00C110122F60A00100000003 /* ArgumentParser */; };
 		00FA01002F58A00000000001 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = 00FA01012F58A00000000001 /* FluidAudio */; };
+		687F82772F8439D8001BA624 /* StopTypingKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 687F82702F8439D8001BA624 /* StopTypingKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,6 +38,13 @@
 			remoteGlobalIDString = 00C110052F60A00100000007;
 			remoteInfo = "wispr-cli";
 		};
+		687F82752F8439D8001BA624 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 00A1C0AE2F50AD06001D1A22 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 687F826F2F8439D8001BA624;
+			remoteInfo = StopTypingKeyboard;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -50,6 +58,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		687F827C2F8439D8001BA624 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				687F82772F8439D8001BA624 /* StopTypingKeyboard.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -57,6 +76,8 @@
 		00A1C0C32F50AD09001D1A22 /* wisprTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = wisprTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00A1C0CD2F50AD09001D1A22 /* wisprUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = wisprUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00C110012F60A00100000005 /* wispr-cli */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "wispr-cli"; sourceTree = BUILT_PRODUCTS_DIR; };
+		687F82612F84397E001BA624 /* StopTyping.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StopTyping.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		687F82702F8439D8001BA624 /* StopTypingKeyboard.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StopTypingKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -79,6 +100,98 @@
 			);
 			target = 00C110052F60A00100000007 /* wispr-cli */;
 		};
+		687F82782F8439D8001BA624 /* Exceptions for "StopTypingKeyboard" folder in "StopTypingKeyboard" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 687F826F2F8439D8001BA624 /* StopTypingKeyboard */;
+		};
+		687F82922F84405B001BA624 /* Exceptions for "StopTyping" folder in "StopTypingKeyboard" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AudioConverter.swift,
+				GroqCloudService.swift,
+				iOSAudioEngine.swift,
+				KeychainHelper.swift,
+				SmartPostProcessor.swift,
+			);
+			target = 687F826F2F8439D8001BA624 /* StopTypingKeyboard */;
+		};
+		687F83DE2F845057001BA624 /* Exceptions for "wispr" folder in "StopTyping" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+				ContentView.swift,
+				Models/AppStateType.swift,
+				Models/AppUpdateInfo.swift,
+				Models/AudioInputDevice.swift,
+				Models/OnboardingStep.swift,
+				Models/PermissionStatus.swift,
+				Models/SemanticVersion.swift,
+				Services/AudioConverter.swift,
+				Services/AudioEngine.swift,
+				Services/AudioFileDecoder.swift,
+				Services/CompositeTranscriptionEngine.swift,
+				Services/GroqCloudService.swift,
+				Services/HotkeyMonitor.swift,
+				Services/KeychainHelper.swift,
+				Services/ParakeetService.swift,
+				Services/PermissionManager.swift,
+				Services/SettingsStore.swift,
+				Services/SmartPostProcessor.swift,
+				Services/SoundFeedbackService.swift,
+				Services/StateManager.swift,
+				Services/TextInsertionService.swift,
+				Services/UpdateChecker.swift,
+				Services/WhisperService.swift,
+				UI/CLIInstallDialog.swift,
+				UI/Components/ModelRowView.swift,
+				UI/Components/SuffixEditorView.swift,
+				UI/MenuBarController.swift,
+				UI/ModelDownloadProgressView.swift,
+				UI/ModelManagementView.swift,
+				UI/Onboarding/OnboardingAccessibilityStep.swift,
+				UI/Onboarding/OnboardingCompletionStep.swift,
+				UI/Onboarding/OnboardingComponents.swift,
+				UI/Onboarding/OnboardingFlow.swift,
+				UI/Onboarding/OnboardingHotkeyStep.swift,
+				UI/Onboarding/OnboardingMicPermissionStep.swift,
+				UI/Onboarding/OnboardingPreview.swift,
+				UI/Onboarding/OnboardingTestDictationStep.swift,
+				UI/Onboarding/OnboardingWelcomeStep.swift,
+				UI/RecordingOverlayPanel.swift,
+				UI/RecordingOverlayView.swift,
+				UI/Settings/HotkeyRecorderView.swift,
+				UI/Settings/KeyCodeMapping.swift,
+				UI/Settings/SettingsView.swift,
+				UI/Settings/SupportedLanguage.swift,
+				UI/StopTypingPopoverView.swift,
+				Utilities/FillerWordCleaner.swift,
+				Utilities/Logger.swift,
+				Utilities/ModelPaths.swift,
+				Utilities/PreviewHelpers.swift,
+				Utilities/SFSymbols.swift,
+				Utilities/StopTypingBrand.swift,
+				Utilities/StopTypingMenuBarMark.swift,
+				Utilities/UIThemeEngine.swift,
+				wisprApp.swift,
+			);
+			target = 687F82602F84397E001BA624 /* StopTyping */;
+		};
+		687F83E02F845399001BA624 /* Exceptions for "wispr" folder in "StopTypingKeyboard" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Models/DownloadProgress.swift,
+				Models/ModelInfo.swift,
+				Models/ModelStatus.swift,
+				Models/TranscriptionLanguage.swift,
+				Models/TranscriptionResult.swift,
+				Models/WisprError.swift,
+				Services/TranscriptionEngine.swift,
+			);
+			target = 687F826F2F8439D8001BA624 /* StopTypingKeyboard */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -86,6 +199,8 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				00C110142F60A00100000009 /* Exceptions for "wispr" folder in "wispr-cli" target */,
+				687F83DE2F845057001BA624 /* Exceptions for "wispr" folder in "StopTyping" target */,
+				687F83E02F845399001BA624 /* Exceptions for "wispr" folder in "StopTypingKeyboard" target */,
 			);
 			path = wispr;
 			sourceTree = "<group>";
@@ -103,6 +218,22 @@
 		00C110022F60A0010000000A /* wispr-cli */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "wispr-cli";
+			sourceTree = "<group>";
+		};
+		687F82622F84397E001BA624 /* StopTyping */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				687F82922F84405B001BA624 /* Exceptions for "StopTyping" folder in "StopTypingKeyboard" target */,
+			);
+			path = StopTyping;
+			sourceTree = "<group>";
+		};
+		687F82712F8439D8001BA624 /* StopTypingKeyboard */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				687F82782F8439D8001BA624 /* Exceptions for "StopTypingKeyboard" folder in "StopTypingKeyboard" target */,
+			);
+			path = StopTypingKeyboard;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -141,6 +272,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		687F825E2F84397E001BA624 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		687F826D2F8439D8001BA624 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -151,6 +296,8 @@
 				00C110022F60A0010000000A /* wispr-cli */,
 				00A1C0C62F50AD09001D1A22 /* wisprTests */,
 				00A1C0D02F50AD09001D1A22 /* wisprUITests */,
+				687F82622F84397E001BA624 /* StopTyping */,
+				687F82712F8439D8001BA624 /* StopTypingKeyboard */,
 				00A1C0B72F50AD06001D1A22 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -162,6 +309,8 @@
 				00C110012F60A00100000005 /* wispr-cli */,
 				00A1C0C32F50AD09001D1A22 /* wisprTests.xctest */,
 				00A1C0CD2F50AD09001D1A22 /* wisprUITests.xctest */,
+				687F82612F84397E001BA624 /* StopTyping.app */,
+				687F82702F8439D8001BA624 /* StopTypingKeyboard.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -265,6 +414,53 @@
 			productReference = 00C110012F60A00100000005 /* wispr-cli */;
 			productType = "com.apple.product-type.tool";
 		};
+		687F82602F84397E001BA624 /* StopTyping */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 687F826B2F84397F001BA624 /* Build configuration list for PBXNativeTarget "StopTyping" */;
+			buildPhases = (
+				687F825D2F84397E001BA624 /* Sources */,
+				687F825E2F84397E001BA624 /* Frameworks */,
+				687F825F2F84397E001BA624 /* Resources */,
+				687F827C2F8439D8001BA624 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				687F82762F8439D8001BA624 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				00A1C0B82F50AD06001D1A22 /* wispr */,
+				687F82622F84397E001BA624 /* StopTyping */,
+			);
+			name = StopTyping;
+			packageProductDependencies = (
+			);
+			productName = StopTyping;
+			productReference = 687F82612F84397E001BA624 /* StopTyping.app */;
+			productType = "com.apple.product-type.application";
+		};
+		687F826F2F8439D8001BA624 /* StopTypingKeyboard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 687F82792F8439D8001BA624 /* Build configuration list for PBXNativeTarget "StopTypingKeyboard" */;
+			buildPhases = (
+				687F826C2F8439D8001BA624 /* Sources */,
+				687F826D2F8439D8001BA624 /* Frameworks */,
+				687F826E2F8439D8001BA624 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				687F82712F8439D8001BA624 /* StopTypingKeyboard */,
+			);
+			name = StopTypingKeyboard;
+			packageProductDependencies = (
+			);
+			productName = StopTypingKeyboard;
+			productReference = 687F82702F8439D8001BA624 /* StopTypingKeyboard.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -272,7 +468,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2630;
+				LastSwiftUpdateCheck = 2640;
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					00A1C0B52F50AD06001D1A22 = {
@@ -288,6 +484,13 @@
 					};
 					00C110052F60A00100000007 = {
 						CreatedOnToolsVersion = 26.3;
+					};
+					687F82602F84397E001BA624 = {
+						CreatedOnToolsVersion = 26.4;
+						LastSwiftMigration = 2640;
+					};
+					687F826F2F8439D8001BA624 = {
+						CreatedOnToolsVersion = 26.4;
 					};
 				};
 			};
@@ -314,6 +517,8 @@
 				00C110052F60A00100000007 /* wispr-cli */,
 				00A1C0C22F50AD09001D1A22 /* wisprTests */,
 				00A1C0CC2F50AD09001D1A22 /* wisprUITests */,
+				687F82602F84397E001BA624 /* StopTyping */,
+				687F826F2F8439D8001BA624 /* StopTypingKeyboard */,
 			);
 		};
 /* End PBXProject section */
@@ -334,6 +539,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		00A1C0CB2F50AD09001D1A22 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		687F825F2F84397E001BA624 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		687F826E2F8439D8001BA624 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -371,6 +590,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		687F825D2F84397E001BA624 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		687F826C2F8439D8001BA624 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -388,6 +621,11 @@
 			isa = PBXTargetDependency;
 			target = 00C110052F60A00100000007 /* wispr-cli */;
 			targetProxy = 00C1100C2F60A00100000006 /* PBXContainerItemProxy */;
+		};
+		687F82762F8439D8001BA624 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 687F826F2F8439D8001BA624 /* StopTypingKeyboard */;
+			targetProxy = 687F82752F8439D8001BA624 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -525,6 +763,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = wispr/wispr.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -569,6 +808,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = wispr/wispr.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -760,6 +1000,143 @@
 			};
 			name = Release;
 		};
+		687F82692F84397F001BA624 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BP4WA38WQZ;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Stop Typing needs microphone access to transcribe your voice into text.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stormacq.StopTyping;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		687F826A2F84397F001BA624 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BP4WA38WQZ;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Stop Typing needs microphone access to transcribe your voice into text.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stormacq.StopTyping;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		687F827A2F8439D8001BA624 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = StopTypingKeyboard/StopTypingKeyboard.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BP4WA38WQZ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StopTypingKeyboard/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = StopTypingKeyboard;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stormacq.StopTyping.StopTypingKeyboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		687F827B2F8439D8001BA624 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = StopTypingKeyboard/StopTypingKeyboard.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BP4WA38WQZ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StopTypingKeyboard/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = StopTypingKeyboard;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stormacq.StopTyping.StopTypingKeyboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -804,6 +1181,24 @@
 			buildConfigurations = (
 				00C110062F60A00100000010 /* Debug */,
 				00C110072F60A00100000011 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		687F826B2F84397F001BA624 /* Build configuration list for PBXNativeTarget "StopTyping" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				687F82692F84397F001BA624 /* Debug */,
+				687F826A2F84397F001BA624 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		687F82792F8439D8001BA624 /* Build configuration list for PBXNativeTarget "StopTypingKeyboard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				687F827A2F8439D8001BA624 /* Debug */,
+				687F827B2F8439D8001BA624 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
