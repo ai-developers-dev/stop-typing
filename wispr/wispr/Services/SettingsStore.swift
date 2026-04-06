@@ -156,7 +156,7 @@ final class SettingsStore {
         static let hotkeyKeyCode: UInt32 = 49          // Space
         static let hotkeyModifiers: UInt32 = 2048      // Option
         static let selectedAudioDeviceUID: String? = nil
-        static let activeModelName: String = ModelInfo.KnownID.tiny
+        static let activeModelName: String = ModelInfo.KnownID.parakeetV3
         static let languageMode: TranscriptionLanguage = .autoDetect
         static let showRecordingOverlay: Bool = true
         static let launchAtLogin: Bool = false
@@ -170,7 +170,7 @@ final class SettingsStore {
         static let autoSendEnterEnabled: Bool = false
         static let subscriptionTier: SubscriptionTier = .free
         static let cloudContextPrompt: String = GroqCloudService.defaultContextPrompt
-        static let smartPostProcessing: Bool = true
+        static let smartPostProcessing: Bool = false
     }
 
     // MARK: - Dependencies

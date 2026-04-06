@@ -291,7 +291,7 @@ final class StateManager {
         }
 
         // Smart post-processing via LLM (Pro tier only)
-        if settingsStore.smartPostProcessing, let processor = smartPostProcessor {
+        if settingsStore.subscriptionTier == .pro && settingsStore.smartPostProcessing, let processor = smartPostProcessor {
             cleaned = await processor.process(cleaned)
         }
 

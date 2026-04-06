@@ -113,7 +113,7 @@ export default function DashboardPage() {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--st-primary)] text-[var(--st-canvas)] text-sm font-semibold hover:bg-[var(--st-primary-container)] transition-colors"
             >
               <Download className="w-4 h-4" />
-              Download DMG
+              Download for Mac
               <ExternalLink className="w-3 h-3" />
             </a>
           </div>
