@@ -13,6 +13,7 @@ import SwiftUI
 /// Observes `StateManager.appState` to track recording/processing states and
 /// captures the transcription result when the cycle completes.
 struct OnboardingTestDictationStep: View {
+    @Environment(SettingsStore.self) private var settingsStore: SettingsStore
     @Environment(UIThemeEngine.self) private var theme: UIThemeEngine
     @Environment(StateManager.self) private var stateManager: StateManager
 
@@ -42,7 +43,7 @@ struct OnboardingTestDictationStep: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(theme.primaryTextColor)
 
-            Text("Press ⌥Space (Option + Space), speak a short phrase, then release to see your transcription.")
+            Text("Press \(hotkeyDisplayString), speak a short phrase, then release to see your transcription.")
                 .font(.body)
                 .foregroundStyle(theme.secondaryTextColor)
                 .multilineTextAlignment(.center)
@@ -103,6 +104,14 @@ struct OnboardingTestDictationStep: View {
     }
 
     // MARK: - Helpers
+
+    /// The hotkey display string read from the user's current configuration.
+    private var hotkeyDisplayString: String {
+        KeyCodeMapping.shared.hotkeyDisplayString(
+            keyCode: settingsStore.hotkeyKeyCode,
+            modifiers: settingsStore.hotkeyModifiers
+        )
+    }
 
     /// The icon color for the test dictation step, reflecting the current state.
     private var testDictationIconColor: Color {

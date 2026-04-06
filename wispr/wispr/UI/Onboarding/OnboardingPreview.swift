@@ -24,7 +24,7 @@ struct OnboardingPreview: View {
     }
 
     var body: some View {
-        OnboardingFlow(whisperService: PreviewMocks.makeWhisperService(), initialStep: step)
+        OnboardingFlow(whisperService: PreviewMocks.makeWhisperService(), hotkeyMonitor: PreviewMocks.makeHotkeyMonitor(), initialStep: step)
             .environment(permissionManager)
             .environment(settingsStore)
             .environment(theme)
@@ -45,8 +45,8 @@ struct OnboardingPreview: View {
     OnboardingPreview(step: .accessibilityPermission)
 }
 
-#Preview("Model Selection") {
-    OnboardingPreview(step: .modelSelection)
+#Preview("Hotkey Setup") {
+    OnboardingPreview(step: .hotkeySetup)
 }
 
 #Preview("Test Dictation") {

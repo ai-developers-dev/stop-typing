@@ -12,7 +12,7 @@ enum OnboardingStep: Int, Sendable, CaseIterable {
     case welcome = 0
     case microphonePermission = 1
     case accessibilityPermission = 2
-    case modelSelection = 3
+    case hotkeySetup = 3
     case testDictation = 4
     case completion = 5
     
@@ -22,7 +22,7 @@ enum OnboardingStep: Int, Sendable, CaseIterable {
     
     var isRequired: Bool {
         switch self {
-        case .microphonePermission, .accessibilityPermission, .modelSelection:
+        case .microphonePermission, .accessibilityPermission, .hotkeySetup:
             return true
         default:
             return false

@@ -28,7 +28,7 @@ struct OnboardingCompletionStep: View {
                 .fontWeight(.bold)
                 .foregroundStyle(theme.primaryTextColor)
 
-            Text("Stop Typing is configured and ready to use. Press ⌥Space to start dictating at any time.")
+            Text("Stop Typing is configured and ready to use. Press your hotkey to start dictating at any time.")
                 .font(.body)
                 .foregroundStyle(theme.secondaryTextColor)
                 .multilineTextAlignment(.center)
@@ -45,6 +45,6 @@ struct OnboardingCompletionStep: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Setup complete. Stop Typing is ready. Press Option Space to start dictating.")
+        .accessibilityLabel("Setup complete. Stop Typing is ready. Press your configured hotkey to start dictating.")
     }
 }

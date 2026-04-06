@@ -2,7 +2,7 @@
 //  SFSymbols.swift
 //  wispr
 //
-//  Centralized SF Symbol name constants used throughout the Wispr application.
+//  Centralized SF Symbol name constants used throughout the Stop Typing application.
 //  Ensures visual consistency (Requirement 14.1) and makes symbol names easy
 //  to update in one place.
 //
@@ -11,7 +11,7 @@
 
 import Foundation
 
-/// Centralized SF Symbol name constants for the Wispr application.
+/// Centralized SF Symbol name constants for the Stop Typing application.
 ///
 /// All SF Symbol names used in the app are defined here so they remain
 /// consistent across views and are easy to audit or update.

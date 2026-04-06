@@ -63,7 +63,7 @@ struct OnboardingContinueButtonStyle: ButtonStyle {
             .frame(minHeight: 44)
             .background(
                 Capsule()
-                    .fill(Color.accentColor)
+                    .fill(StopTypingBrand.swiftPrimary)
                     .opacity(isEnabled ? 1.0 : 0.35)
             )
             .scaleEffect(configuration.isPressed && isEnabled ? 0.96 : 1.0)

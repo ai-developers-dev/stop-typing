@@ -24,7 +24,7 @@ struct OnboardingWelcomeStep: View {
                 .fontWeight(.bold)
                 .foregroundStyle(theme.primaryTextColor)
 
-            Text("Stop Typing lets you dictate text anywhere on your Mac using a global hotkey. All transcription happens on-device — your voice never leaves your computer.")
+            Text("Stop Typing lets you dictate text anywhere on your Mac using a global hotkey. Transcription happens on-device or via our secure cloud API for Pro users.")
                 .font(.body)
                 .foregroundStyle(theme.secondaryTextColor)
                 .multilineTextAlignment(.center)
@@ -32,6 +32,6 @@ struct OnboardingWelcomeStep: View {
                 .lineSpacing(5)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Welcome to Stop Typing. Dictate text anywhere on your Mac. All transcription happens on-device.")
+        .accessibilityLabel("Welcome to Stop Typing. Dictate text anywhere on your Mac. Transcription happens on-device or via secure cloud.")
     }
 }

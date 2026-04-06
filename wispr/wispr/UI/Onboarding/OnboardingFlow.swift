@@ -24,6 +24,9 @@ struct OnboardingFlow: View {
     /// Passed as a regular property because actors are not Observable.
     let whisperService: any TranscriptionEngine
 
+    /// The hotkey monitor for registering/unregistering during hotkey configuration.
+    let hotkeyMonitor: HotkeyMonitor
+
     /// Closure invoked when onboarding is complete and the window should close.
     /// The parent view or window controller sets this to dismiss the onboarding window.
     var onDismiss: (() -> Void)?
@@ -41,11 +44,6 @@ struct OnboardingFlow: View {
 
     /// Whether the view has performed initial resume logic
     @State private var hasResumed = false
-
-    // MARK: - Model Selection State
-
-    /// Whether a model download has completed successfully
-    @State private var downloadComplete = false
 
     // MARK: - Test Dictation State (Req 13.9, 13.10)
 
@@ -78,7 +76,7 @@ struct OnboardingFlow: View {
                 .padding(.horizontal, 28)
                 .padding(.vertical, 20)
         }
-        .liquidGlassPanel()
+        .background(StopTypingBrand.swiftCanvas)
         .highContrastBorder(cornerRadius: 12)
         .motionRespectingAnimation(value: currentStep)
         .task {
@@ -162,11 +160,8 @@ struct OnboardingFlow: View {
                     OnboardingMicPermissionStep()
                 case .accessibilityPermission:
                     OnboardingAccessibilityStep()
-                case .modelSelection:
-                    OnboardingModelSelectionStep(
-                        whisperService: whisperService,
-                        downloadComplete: $downloadComplete
-                    )
+                case .hotkeySetup:
+                    OnboardingHotkeyStep(hotkeyMonitor: hotkeyMonitor)
                 case .testDictation:
                     OnboardingTestDictationStep(
                         testTranscriptionResult: $testTranscriptionResult,
@@ -277,9 +272,9 @@ struct OnboardingFlow: View {
             return permissionManager.microphoneStatus == .authorized
         case .accessibilityPermission:
             return permissionManager.accessibilityStatus == .authorized
-        case .modelSelection:
-            // Req 13.8: Continue disabled until download completes successfully
-            return downloadComplete
+        case .hotkeySetup:
+            // Default hotkey is always valid; user can change or keep it
+            return true
         case .testDictation:
             // Skippable step — complete when a transcription result exists
             return !testTranscriptionResult.isEmpty
@@ -368,10 +363,9 @@ struct OnboardingFlow: View {
             return permissionManager.microphoneStatus == .authorized
         case .accessibilityPermission:
             return permissionManager.accessibilityStatus == .authorized
-        case .modelSelection:
-            // Only skip if the active model is Parakeet V3 (the auto-download target).
-            // A leftover Whisper model name shouldn't skip this step.
-            return settingsStore.activeModelName == ModelInfo.KnownID.parakeetV3
+        case .hotkeySetup:
+            // Default hotkey is always valid; hotkey step is always resumable
+            return true
         case .testDictation:
             // Skippable — never blocks resume
             return true

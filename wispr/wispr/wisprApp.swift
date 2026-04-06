@@ -272,6 +272,7 @@ final class WisprAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate 
 
         let onboardingView = OnboardingFlow(
             whisperService: whisperService,
+            hotkeyMonitor: hotkeyMonitor,
             onDismiss: { [weak self] in
                 self?.completeOnboarding()
             }
@@ -289,6 +290,7 @@ final class WisprAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate 
         window.styleMask = [.titled, .closable]
         window.setContentSize(NSSize(width: 600, height: 500))
         window.center()
+        window.appearance = NSAppearance(named: .darkAqua)
         // Keep the onboarding window above normal windows. Accessory apps
         // (no Dock icon) lose window layering when focus moves to another
         // app (e.g. System Settings for permissions). Floating level
