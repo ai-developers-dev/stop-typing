@@ -16,6 +16,7 @@ extension ModelProvider {
         switch self {
         case .whisper: SFSymbols.providerWhisper
         case .nvidiaParakeet: SFSymbols.providerParakeet
+        case .groqCloud: "cloud.fill"
         }
     }
 
@@ -23,6 +24,7 @@ extension ModelProvider {
         switch self {
         case .whisper: .blue
         case .nvidiaParakeet: .green
+        case .groqCloud: .purple
         }
     }
 }
@@ -202,8 +204,11 @@ struct ModelManagementView: View {
     // MARK: - Model Section
 
     /// Builds the view for a single model: either the inline download progress or the standard row.
+    /// Cloud models are gated behind the Pro subscription tier.
     @ViewBuilder
     private func modelSection(for model: ModelInfo) -> some View {
+        let isCloudLocked = model.isCloudModel && settingsStore.subscriptionTier == .free
+
         if activeDownloads.contains(model.id) {
             // Self-contained download progress view
             ModelDownloadProgressView(
@@ -222,6 +227,29 @@ struct ModelManagementView: View {
             )
             .padding(.vertical, 8)
             .padding(.horizontal, 14)
+        } else if isCloudLocked {
+            // Cloud model locked behind Pro — show with Pro badge, no actions
+            ModelRowView(
+                model: model,
+                theme: theme,
+                isActivating: false,
+                isHighlighted: false,
+                namespace: highlightNamespace,
+                onDownload: {},
+                onSetActive: {},
+                onDelete: {}
+            )
+            .opacity(0.5)
+            .overlay(alignment: .trailing) {
+                StatusPillView(
+                    label: "Pro",
+                    symbolName: "crown.fill",
+                    foregroundColor: .orange,
+                    backgroundColor: .orange.opacity(0.15)
+                )
+                .padding(.trailing, 14)
+            }
+            .allowsHitTesting(false)
         } else {
             // Standard model row with info and action buttons
             ModelRowView(

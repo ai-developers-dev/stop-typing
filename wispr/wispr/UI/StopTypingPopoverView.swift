@@ -132,8 +132,6 @@ struct StopTypingPopoverView: View {
                     hc: hc
                 )
                 cardDivider
-                StatusRow(label: "Model", value: activeModelName, hc: hc)
-                cardDivider
                 StatusRow(label: "Shortcut", value: hotkeyDisplayString, hc: hc)
             }
             .padding(.vertical, 6)
@@ -244,17 +242,6 @@ struct StopTypingPopoverView: View {
                     actions.dismiss()
                 }
 
-                cardDivider
-
-                CardRow(
-                    symbol: SFSymbols.model,
-                    title: "Model Management\u{2026}",
-                    accent: hc ? .primary : StopTypingBrand.swiftPrimary,
-                    textColor: hc ? .primary : StopTypingBrand.swiftOnSurface
-                ) {
-                    actions.openModelManagement()
-                    actions.dismiss()
-                }
             }
         }
     }

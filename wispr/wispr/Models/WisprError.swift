@@ -69,6 +69,20 @@ enum WisprError: Error, Sendable, Equatable {
     
     /// No Whisper models are available (all deleted or none downloaded).
     case noModelsAvailable
+
+    // MARK: - Cloud API
+
+    /// Cloud API key is missing or invalid.
+    case cloudAPIKeyMissing
+
+    /// Cloud API request failed with a specific error message.
+    case cloudAPIRequestFailed(String)
+
+    /// Cloud API rate limit exceeded.
+    case cloudAPIRateLimited
+
+    /// No network connection available for cloud transcription.
+    case cloudNoNetwork
 }
 
 // MARK: - LocalizedError
@@ -108,6 +122,14 @@ extension WisprError: LocalizedError {
             return "Model deletion failed: \(message)"
         case .noModelsAvailable:
             return "No transcription models are available."
+        case .cloudAPIKeyMissing:
+            return "Cloud API key is not configured."
+        case .cloudAPIRequestFailed(let message):
+            return "Cloud transcription failed: \(message)"
+        case .cloudAPIRateLimited:
+            return "Cloud API rate limit exceeded. Try again shortly."
+        case .cloudNoNetwork:
+            return "No network connection. Switch to a local model for offline use."
         }
     }
 }

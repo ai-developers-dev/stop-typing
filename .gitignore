@@ -5,3 +5,6 @@ wispr/xcconfig-override.xcconfig
 
 # Claude Code local settings (user-specific permissions)
 .claude/settings.local.json
+
+# API keys (never commit)
+wispr/wispr/Secrets.plist

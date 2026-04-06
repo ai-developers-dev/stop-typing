@@ -241,6 +241,26 @@ struct ModelRowView: View {
                     .accessibilityHint("Switches transcription to use this model")
                 }
 
+                // Cloud models have no local files to delete
+                if !model.isCloudModel {
+                    Button(role: .destructive) {
+                        onDelete()
+                    } label: {
+                        Label("Delete", systemImage: theme.actionSymbol(.delete))
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .tint(.red)
+                    .highContrastBorder(cornerRadius: 6)
+                    .keyboardFocusRing()
+                    .disabled(isActivating)
+                    .accessibilityLabel("Delete \(model.displayName) model")
+                    .accessibilityHint("Removes the model from disk")
+                }
+            }
+
+        case .active:
+            if !model.isCloudModel {
                 Button(role: .destructive) {
                     onDelete()
                 } label: {
@@ -251,24 +271,9 @@ struct ModelRowView: View {
                 .tint(.red)
                 .highContrastBorder(cornerRadius: 6)
                 .keyboardFocusRing()
-                .disabled(isActivating)
                 .accessibilityLabel("Delete \(model.displayName) model")
-                .accessibilityHint("Removes the model from disk")
+                .accessibilityHint("Removes the active model from disk. A different model will be activated.")
             }
-
-        case .active:
-            Button(role: .destructive) {
-                onDelete()
-            } label: {
-                Label("Delete", systemImage: theme.actionSymbol(.delete))
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-            .tint(.red)
-            .highContrastBorder(cornerRadius: 6)
-            .keyboardFocusRing()
-            .accessibilityLabel("Delete \(model.displayName) model")
-            .accessibilityHint("Removes the active model from disk. A different model will be activated.")
         }
     }
 

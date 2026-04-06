@@ -10,6 +10,12 @@ import Observation
 import ServiceManagement
 import os
 
+/// Subscription tier controlling access to cloud transcription models.
+enum SubscriptionTier: String, Sendable {
+    case free
+    case pro
+}
+
 @MainActor
 @Observable
 final class SettingsStore {
@@ -101,6 +107,19 @@ final class SettingsStore {
         didSet { guard !isLoading else { return }; defaults.set(autoSendEnterEnabled, forKey: Keys.autoSendEnterEnabled) }
     }
 
+    // MARK: - Subscription
+
+    /// The user's current subscription tier. Controls access to cloud transcription models.
+    var subscriptionTier: SubscriptionTier {
+        didSet { guard !isLoading else { return }; defaults.set(subscriptionTier.rawValue, forKey: Keys.subscriptionTier) }
+    }
+
+    /// Custom context prompt for cloud transcription (vocabulary hints, style guidance).
+    /// Sent with every Groq API request. Max 224 tokens.
+    var cloudContextPrompt: String {
+        didSet { guard !isLoading else { return }; defaults.set(cloudContextPrompt, forKey: Keys.cloudContextPrompt) }
+    }
+
     // MARK: - UserDefaults Keys
     private enum Keys {
         static let hotkeyKeyCode = "hotkeyKeyCode"
@@ -118,6 +137,8 @@ final class SettingsStore {
         static let autoSuffixText = "autoSuffixText"
         static let removeFillerWords = "removeFillerWords"
         static let autoSendEnterEnabled = "autoSendEnterEnabled"
+        static let subscriptionTier = "subscriptionTier"
+        static let cloudContextPrompt = "cloudContextPrompt"
     }
     
     // MARK: - Default Values
@@ -140,6 +161,8 @@ final class SettingsStore {
         static let autoSuffixText: String = " "
         static let removeFillerWords: Bool = false
         static let autoSendEnterEnabled: Bool = false
+        static let subscriptionTier: SubscriptionTier = .free
+        static let cloudContextPrompt: String = GroqCloudService.defaultContextPrompt
     }
 
     // MARK: - Dependencies
@@ -166,6 +189,8 @@ final class SettingsStore {
         self.autoSuffixText = Defaults.autoSuffixText
         self.removeFillerWords = Defaults.removeFillerWords
         self.autoSendEnterEnabled = Defaults.autoSendEnterEnabled
+        self.subscriptionTier = Defaults.subscriptionTier
+        self.cloudContextPrompt = Defaults.cloudContextPrompt
 
         // Load persisted values
         load()
@@ -190,6 +215,8 @@ final class SettingsStore {
         autoSuffixText = Defaults.autoSuffixText
         removeFillerWords = Defaults.removeFillerWords
         autoSendEnterEnabled = Defaults.autoSendEnterEnabled
+        subscriptionTier = Defaults.subscriptionTier
+        cloudContextPrompt = Defaults.cloudContextPrompt
     }
     
     // MARK: - Persistence
@@ -213,6 +240,8 @@ final class SettingsStore {
         defaults.set(autoSuffixText, forKey: Keys.autoSuffixText)
         defaults.set(removeFillerWords, forKey: Keys.removeFillerWords)
         defaults.set(autoSendEnterEnabled, forKey: Keys.autoSendEnterEnabled)
+        defaults.set(subscriptionTier.rawValue, forKey: Keys.subscriptionTier)
+        defaults.set(cloudContextPrompt, forKey: Keys.cloudContextPrompt)
 
         if let encoded = try? JSONEncoder().encode(languageMode) {
             defaults.set(encoded, forKey: Keys.languageMode)
@@ -290,6 +319,17 @@ final class SettingsStore {
         // Load auto-send Enter settings
         if defaults.object(forKey: Keys.autoSendEnterEnabled) != nil {
             self.autoSendEnterEnabled = defaults.bool(forKey: Keys.autoSendEnterEnabled)
+        }
+
+        // Load subscription tier
+        if let tierString = defaults.string(forKey: Keys.subscriptionTier),
+           let tier = SubscriptionTier(rawValue: tierString) {
+            self.subscriptionTier = tier
+        }
+
+        // Load cloud context prompt
+        if let prompt = defaults.string(forKey: Keys.cloudContextPrompt) {
+            self.cloudContextPrompt = prompt
         }
     }
     

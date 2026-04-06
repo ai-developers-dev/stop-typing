@@ -11,6 +11,7 @@ import Foundation
 enum ModelProvider: String, Sendable, Equatable, Hashable, CaseIterable {
     case whisper = "OpenAI Whisper"
     case nvidiaParakeet = "NVIDIA Parakeet"
+    case groqCloud = "Groq Cloud"
 }
 
 /// Information about a transcription model
@@ -24,8 +25,13 @@ struct ModelInfo: Identifiable, Sendable, Equatable {
 
     /// The provider that owns this model, derived from the model ID.
     var provider: ModelProvider {
-        id.hasPrefix("parakeet") ? .nvidiaParakeet : .whisper
+        if id.hasPrefix("groq-") { return .groqCloud }
+        if id.hasPrefix("parakeet") { return .nvidiaParakeet }
+        return .whisper
     }
+
+    /// Whether this model requires a network connection (cloud API).
+    var isCloudModel: Bool { provider == .groqCloud }
 
     // MARK: - Known Model IDs
 
@@ -39,5 +45,8 @@ struct ModelInfo: Identifiable, Sendable, Equatable {
         // Parakeet
         nonisolated static let parakeetV3 = "parakeet-v3"
         nonisolated static let parakeetEou = "parakeet-eou-160ms"
+        // Groq Cloud
+        nonisolated static let groqWhisperTurbo = "groq-whisper-large-v3-turbo"
+        nonisolated static let groqWhisperV3 = "groq-whisper-large-v3"
     }
 }

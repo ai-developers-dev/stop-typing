@@ -67,11 +67,15 @@ final class WisprAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate 
     /// Audio capture engine (actor).
     let audioEngine = AudioEngine()
 
-    /// On-device transcription service (actor).
-    /// Composite engine aggregating WhisperKit and Parakeet V3 behind a single interface.
+    /// Transcription service (actor).
+    /// Composite engine aggregating local (WhisperKit, Parakeet) and cloud (Groq) engines
+    /// behind a single interface. The active model ID determines which engine handles requests.
     let whisperService: any TranscriptionEngine = CompositeTranscriptionEngine(engines: [
         WhisperService(),
-        ParakeetService()
+        ParakeetService(),
+        GroqCloudService(apiKeyProvider: {
+            KeychainHelper.load(key: KeychainHelper.groqAPIKey)
+        })
     ])
 
     /// Text insertion via Accessibility API / clipboard fallback.
@@ -124,6 +128,9 @@ final class WisprAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate 
     /// Creates the `StateManager` with all dependencies, sets up the menu bar,
     /// registers the hotkey, and starts monitoring tasks.
     private func bootstrap() {
+        // Seed the hardcoded Groq API key into Keychain (app-owned, no prompt).
+        KeychainHelper.seedGroqKeyIfNeeded()
+
         Log.app.debug("bootstrap — creating services")
         Log.app.debug("bootstrap — SettingsStore created")
         Log.app.debug("bootstrap — PermissionManager created")
