@@ -2,3 +2,6 @@
 
 # Local Xcode/arch overrides (not referenced by the project)
 wispr/xcconfig-override.xcconfig
+
+# Claude Code local settings (user-specific permissions)
+.claude/settings.local.json

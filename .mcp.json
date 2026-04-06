@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "XcodeBuildMCP": {
+      "type": "stdio",
+      "command": "xcodebuildmcp",
+      "args": ["mcp"]
+    },
+    "swiftlens": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["swiftlens"]
+    },
+    "xcode": {
+      "type": "stdio",
+      "command": "xcrun",
+      "args": ["mcpbridge"]
+    },
+    "sosumi": {
+      "type": "http",
+      "url": "https://sosumi.ai/mcp"
+    }
+  }
+}

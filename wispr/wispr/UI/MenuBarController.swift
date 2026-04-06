@@ -166,9 +166,12 @@ final class MenuBarController {
         popover.behavior = .transient
         popover.appearance = NSAppearance(named: .darkAqua)
         popover.animates = !themeEngine.reduceMotion
-        popover.contentSize = NSSize(width: 400, height: 10)
+        popover.contentSize = NSSize(width: 500, height: 10)
         rebuildPopoverContent()
     }
+
+    /// Cached list of audio input devices, refreshed each time the popover is rebuilt.
+    private var cachedAudioDevices: [AudioInputDevice] = []
 
     /// Rebuilds the popover's content view controller with current state.
     private func rebuildPopoverContent() {
@@ -178,6 +181,7 @@ final class MenuBarController {
             openModelManagement: { [weak self] in self?.openModelManagement() },
             selectAutoDetect: { [weak self] in self?.selectAutoDetect() },
             selectLanguage: { [weak self] code in self?.selectLanguage(code) },
+            selectAudioDevice: { [weak self] device in self?.selectAudioDevice(device) },
             openUpdateDownload: { [weak self] in self?.openUpdateDownload() },
             showCLIInstallDialog: { [weak self] in self?.showCLIInstallDialog() },
             quitApp: { [weak self] in self?.quitApp() },
@@ -193,6 +197,9 @@ final class MenuBarController {
             appState: stateManager.appState,
             languageMode: settingsStore.languageMode,
             hotkeyDisplayString: shortcut,
+            activeModelName: settingsStore.activeModelName,
+            audioDevices: cachedAudioDevices,
+            selectedDeviceUID: settingsStore.selectedAudioDeviceUID,
             availableUpdate: updateChecker.availableUpdate,
             isCLIInstalled: isCLIInstalled(),
             actions: actions
@@ -217,9 +224,12 @@ final class MenuBarController {
 
     private func showPopover() {
         guard let button = statusItem.button else { return }
-        rebuildPopoverContent()
-        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-        installEventMonitor()
+        Task {
+            cachedAudioDevices = await audioEngine.availableInputDevices()
+            rebuildPopoverContent()
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            installEventMonitor()
+        }
     }
 
     private func closePopover() {
@@ -333,6 +343,8 @@ final class MenuBarController {
                         _ = self.settingsStore.languageMode
                         _ = self.settingsStore.hotkeyKeyCode
                         _ = self.settingsStore.hotkeyModifiers
+                        _ = self.settingsStore.activeModelName
+                        _ = self.settingsStore.selectedAudioDeviceUID
                         _ = self.updateChecker.availableUpdate
                         _ = self.themeEngine.isDarkMode
                         _ = self.themeEngine.increaseContrast
@@ -452,6 +464,14 @@ final class MenuBarController {
         let mode = TranscriptionLanguage.specific(code: code)
         settingsStore.languageMode = mode
         stateManager.currentLanguage = mode
+    }
+
+    /// Selects an audio input device for recording.
+    func selectAudioDevice(_ device: AudioInputDevice) {
+        settingsStore.selectedAudioDeviceUID = device.uid
+        Task {
+            try? await audioEngine.setInputDevice(device.id)
+        }
     }
 
     /// Checks whether /usr/local/bin/wispr exists and points to the
