@@ -19,6 +19,12 @@ export function Nav() {
       </Link>
 
       <div className="flex items-center gap-4">
+        <Link
+          href="/download"
+          className="text-sm text-[var(--st-on-surface-variant)] hover:text-white transition-colors"
+        >
+          Download
+        </Link>
         {!isLoaded ? (
           <div className="w-20" />
         ) : isSignedIn ? (

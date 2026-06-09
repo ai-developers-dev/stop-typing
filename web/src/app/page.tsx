@@ -24,17 +24,17 @@ export default function Home() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
           <a
-            href="/sign-up"
+            href="/download"
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[var(--st-primary)] text-[var(--st-canvas)] font-semibold text-lg hover:bg-[var(--st-primary-container)] transition-colors"
           >
             <Download className="w-5 h-5" />
-            Download Free
+            Download for Mac
           </a>
           <a
-            href="/sign-up"
+            href="/download"
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full border border-[var(--st-primary)]/30 text-[var(--st-primary)] font-semibold text-lg hover:bg-[var(--st-surface)] transition-colors"
           >
-            Start Pro Trial
+            Start 14-Day Free Trial
             <ChevronRight className="w-5 h-5" />
           </a>
         </div>
@@ -101,7 +101,7 @@ export default function Home() {
               ))}
             </ul>
             <a
-              href="/sign-up"
+              href="/download"
               className="block text-center py-3 rounded-full border border-white/10 text-sm font-medium hover:bg-[var(--st-surface)] transition-colors"
             >
               Download Free
@@ -127,7 +127,7 @@ export default function Home() {
               ))}
             </ul>
             <a
-              href="/sign-up"
+              href="/download"
               className="block text-center py-3 rounded-full bg-[var(--st-primary)] text-[var(--st-canvas)] text-sm font-semibold hover:bg-[var(--st-primary-container)] transition-colors"
             >
               Start Free Trial

@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { UserButton } from "@clerk/nextjs";
-import { Download, CreditCard, ExternalLink, Shield, Wallet, Pencil } from "lucide-react";
+import { Download, CreditCard, Shield, Wallet, Pencil } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CustomerModal } from "../components/customer-modal";
@@ -107,14 +107,11 @@ export default function DashboardPage() {
               Download Stop Typing for macOS. Drag to Applications and launch.
             </p>
             <a
-              href="https://github.com/ai-developers-dev/stop-typing/releases/latest"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/StopTyping.dmg"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--st-primary)] text-[var(--st-canvas)] text-sm font-semibold hover:bg-[var(--st-primary-container)] transition-colors"
             >
               <Download className="w-4 h-4" />
               Download for Mac
-              <ExternalLink className="w-3 h-3" />
             </a>
           </div>
 
